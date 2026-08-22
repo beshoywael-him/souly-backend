@@ -1,0 +1,134 @@
+{
+  "_readme": [
+    "The lesson-to-page map. This file is the ONLY place the mapping lives, and",
+    "it was read off the books themselves — every boundary below was checked",
+    "against the page it claims to start on.",
+    "",
+    "`pages` are PDF page numbers, 1-based, counting from the first page of the",
+    "file. They are NOT the numbers printed at the bottom of the page: this is",
+    "an extract, so PDF page 3 of the maths book carries the printed number 16.",
+    "The PDF number is what addresses the page in the file and in the rendered",
+    "image cache, so it is what the database stores.",
+    "",
+    "Pages left out of every lesson are deliberate: unit title photographs,",
+    "concept dividers, and the notes-for-parents pages. Nothing teaches from",
+    "them, so nothing maps to them.",
+    "",
+    "scripts/ingest_curriculum.py loads this. Editing it and re-running the",
+    "ingest is how the map changes — nothing else writes curriculum_pages."
+  ],
+
+  "books": [
+    {
+      "code": "5th-primary-math",
+      "filename": "5th primary math.pdf",
+      "title": "Mathematics — Primary 5, Unit 1",
+      "subject": "Mathematics",
+      "subject_code": "MATH",
+      "grade": "5",
+      "term": "1",
+      "language": "en",
+      "source_note": "Ministry of Education, Primary 5 Mathematics, English medium. Extract: Theme One (Number Sense and Operations), Unit 1 — Decimal Place Value and Computation.",
+      "skipped_pages": {
+        "1": "Unit 1 title page — full-page photograph",
+        "2": "Concept 1 divider — learning objectives, not taught from",
+        "38": "Concept 2 divider — learning objectives, not taught from"
+      },
+      "lessons": [
+        {
+          "lesson": "Lesson 1: Decimals to the Thousandths Place",
+          "unit": "Concept 1 — Decimals to the Thousandths Place",
+          "pages": [3, 4, 5, 6, 7, 8, 9, 10]
+        },
+        {
+          "lesson": "Lessons 2 & 3: Place Value Shuffle, Composing and Decomposing Decimals",
+          "unit": "Concept 1 — Decimals to the Thousandths Place",
+          "pages": [11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+        },
+        {
+          "lesson": "Lesson 4: Comparing Decimals",
+          "unit": "Concept 1 — Decimals to the Thousandths Place",
+          "pages": [23, 24, 25, 26, 27, 28, 29]
+        },
+        {
+          "lesson": "Lesson 5: Rounding Decimals",
+          "unit": "Concept 1 — Decimals to the Thousandths Place",
+          "pages": [30, 31, 32, 33, 34, 35, 36, 37]
+        },
+        {
+          "lesson": "Lessons 6 & 7: Estimating Decimal Sums, Modeling Decimal Addition",
+          "unit": "Concept 2 — Adding and Subtracting Decimals",
+          "pages": [39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50]
+        },
+        {
+          "lesson": "Lessons 8 to 10: Modeling Decimal Subtracting, Estimating Decimal Differences, Subtracting to the Thousandths Place",
+          "unit": "Concept 2 — Adding and Subtracting Decimals",
+          "pages": [51, 52, 53, 54, 55, 56, 57, 58]
+        },
+        {
+          "lesson": "Lesson 11: Decimal Story Problems",
+          "unit": "Concept 2 — Adding and Subtracting Decimals",
+          "pages": [59, 60, 61, 62]
+        },
+        {
+          "lesson": "Unit 1 Assessment",
+          "unit": "Concept 2 — Adding and Subtracting Decimals",
+          "pages": [63, 64]
+        }
+      ]
+    },
+    {
+      "code": "5th-primary-science",
+      "filename": "5th primary science.pdf",
+      "title": "Science — Primary 5, Concept 1.1",
+      "subject": "Science",
+      "subject_code": "SCI",
+      "grade": "5",
+      "term": "1",
+      "language": "en",
+      "source_note": "Ministry of Education, Primary 5 Science, English medium. Extract: Theme One (Systems), Concept 1.1 — Plant Needs.",
+      "skipped_pages": {
+        "1": "Theme One title page",
+        "2": "'What I Already Know' — prior-knowledge recap",
+        "3": "Concept 1.1 divider",
+        "4": "Full-page photograph",
+        "5": "Notes for parents — written for an adult, not the child",
+        "51": "Concept 1.2 divider — the extract stops before its lessons",
+        "52": "Concept 1.2 learning outcomes",
+        "53": "Concept 1.2 notes for parents"
+      },
+      "lessons": [
+        {
+          "lesson": "Lesson 1: What Plants Need",
+          "unit": "Concept 1.1 — Plant Needs",
+          "pages": [6, 7, 8, 9, 10, 11]
+        },
+        {
+          "lesson": "Lesson 2: Do Plants Need Soil? Sunlight as a Basic Need",
+          "unit": "Concept 1.1 — Plant Needs",
+          "pages": [12, 13, 14, 15, 16, 17, 18, 19]
+        },
+        {
+          "lesson": "Lesson 3: Parts of a Plant and Photosynthesis",
+          "unit": "Concept 1.1 — Plant Needs",
+          "pages": [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]
+        },
+        {
+          "lesson": "Lesson 4: Comparing Plant and Human Systems",
+          "unit": "Concept 1.1 — Plant Needs",
+          "pages": [32, 33, 34, 35, 36, 37, 38, 39, 40, 41]
+        },
+        {
+          "lesson": "Lesson 5: Seed Dispersal",
+          "unit": "Concept 1.1 — Plant Needs",
+          "pages": [42, 43, 44, 45, 46]
+        },
+        {
+          "lesson": "Concept 1.1 Model Exam",
+          "unit": "Concept 1.1 — Plant Needs",
+          "pages": [47, 48, 49, 50]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1462 @@
+/* =============================================================================
+   Souly — additions on top of base.css
+   base.css is the original design, extracted verbatim and not edited.
+   Everything here is new: states the static mockup never had to represent
+   (loading, empty, error, disabled), plus the accessibility settings.
+   ============================================================================= */
+
+/* --- Loading ---------------------------------------------------------------- */
+.skeleton {
+  background: linear-gradient(90deg, #f0ebff 25%, #e5dcff 50%, #f0ebff 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 12px;
+  color: transparent !important;
+}
+.skeleton-line { height: 14px; margin-bottom: 8px; }
+.skeleton-line.short { width: 45%; }
+.skeleton-line.medium { width: 70%; }
+
+.spinner {
+  width: 20px; height: 20px;
+  border: 2.5px solid rgba(124,58,237,0.2);
+  border-top-color: #7C3AED;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+.spinner.light { border-color: rgba(255,255,255,0.35); border-top-color: #fff; }
+
+.page-loading {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 14px; padding: 80px 20px;
+  color: #a78bfa; font-weight: 600; font-size: 14px;
+}
+
+/* --- Empty & error ---------------------------------------------------------- */
+.empty-state {
+  text-align: center; padding: 40px 24px; color: #a78bfa;
+  font-weight: 500; font-size: 14px; line-height: 1.6;
+}
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; display: block; }
+
+.error-banner {
+  background: #fef2f2; border: 1.5px solid #fecaca; color: #b91c1c;
+  border-radius: 16px; padding: 14px 18px; font-size: 13px;
+  font-weight: 600; margin-bottom: 14px; line-height: 1.5;
+}
+.error-banner button {
+  background: #b91c1c; color: #fff; border: none; border-radius: 10px;
+  padding: 7px 14px; font-size: 12px; font-weight: 700; margin-top: 10px;
+  cursor: pointer; font-family: inherit;
+}
+
+/* Offline / degraded notice. Deliberately calm, not alarming — a child
+   should not be frightened by a network blip. */
+.notice-strip {
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+  color: #92400e; border-radius: 14px; padding: 10px 16px;
+  font-size: 12px; font-weight: 700; margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* --- Toasts ----------------------------------------------------------------- */
+.toast-stack {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: 104px; z-index: 300;
+  display: flex; flex-direction: column; gap: 8px;
+  width: 100%; max-width: 380px; padding: 0 16px; pointer-events: none;
+}
+.toast {
+  background: rgba(76,29,149,0.96); color: #fff;
+  border-radius: 16px; padding: 12px 18px;
+  font-size: 14px; font-weight: 700;
+  box-shadow: 0 8px 28px rgba(76,29,149,0.3);
+  animation: pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex; align-items: center; gap: 10px;
+}
+.toast.star { background: linear-gradient(135deg, #7C3AED, #A855F7); }
+.toast.badge { background: linear-gradient(135deg, #f59e0b, #fbbf24); color: #78350f; }
+.toast.level { background: linear-gradient(135deg, #10b981, #34d399); }
+.toast.error { background: #b91c1c; }
+
+/* --- Voice ------------------------------------------------------------------ */
+.voice-btn.recording {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  animation: pulseGlow 1s infinite;
+}
+.voice-btn.thinking { background: linear-gradient(135deg, #a78bfa, #c4b5fd); }
+.voice-btn:disabled { opacity: 0.5; cursor: not-allowed; animation: none; }
+
+.voice-status {
+  font-size: 12px; font-weight: 700; color: #7C3AED;
+  text-align: center; padding: 8px; min-height: 28px;
+}
+.voice-status.listening { color: #ef4444; }
+.voice-status.error { color: #b91c1c; }
+
+/* Waveform shown while recording, so a child with a hearing impairment can
+   see that the microphone is live rather than having to trust it. */
+.wave { display: inline-flex; align-items: flex-end; gap: 3px; height: 16px; }
+.wave span {
+  width: 3px; background: currentColor; border-radius: 2px;
+  animation: waveBar 0.9s ease-in-out infinite;
+}
+.wave span:nth-child(1) { animation-delay: 0s; }
+.wave span:nth-child(2) { animation-delay: 0.15s; }
+.wave span:nth-child(3) { animation-delay: 0.3s; }
+.wave span:nth-child(4) { animation-delay: 0.45s; }
+@keyframes waveBar { 0%,100% { height: 5px; } 50% { height: 16px; } }
+
+.typing-dots { display: inline-flex; gap: 4px; align-items: center; }
+.typing-dots span {
+  width: 7px; height: 7px; border-radius: 50%; background: #a78bfa;
+  animation: bounce 1.2s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+/* --- Chat extras ------------------------------------------------------------ */
+.chat-source {
+  font-size: 10px; color: #a78bfa; font-weight: 600;
+  margin: -6px 0 10px 4px;
+}
+.engine-pill {
+  display: inline-block; font-size: 9px; font-weight: 800;
+  padding: 2px 7px; border-radius: 10px; margin-left: 6px;
+  vertical-align: middle; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.engine-pill.gemini { background: #dcfce7; color: #15803d; }
+.engine-pill.fallback { background: #fef3c7; color: #92400e; }
+
+/* --- Quiz / lesson ---------------------------------------------------------- */
+
+/* The original mockup used <div> for answer options; these are <button> so
+   they're reachable by keyboard and screen reader. A button shrinks to fit its
+   content, so without this the options render at different widths depending on
+   the length of the answer — which also leaks a hint about which one is right. */
+.quiz-option {
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.quiz-option.chosen { border-color: #7C3AED; background: #f5f3ff; }
+.quiz-option:disabled, .quiz-option.locked { pointer-events: none; }
+
+.life-heart { font-size: 18px; transition: opacity 0.3s, transform 0.3s; }
+.life-heart.lost { opacity: 0.25; transform: scale(0.85); }
+
+.speak-btn {
+  background: rgba(124,58,237,0.08); border: none; border-radius: 10px;
+  width: 34px; height: 34px; cursor: pointer; color: #7C3AED;
+  display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: all 0.2s;
+}
+.speak-btn:hover { background: rgba(124,58,237,0.18); }
+.speak-btn.speaking { background: #7C3AED; color: #fff; }
+
+.step-dots { display: flex; gap: 6px; justify-content: center; margin: 14px 0; }
+.step-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #ede9fe;
+  transition: all 0.3s;
+}
+.step-dot.done { background: #c4b5fd; }
+.step-dot.active { background: #7C3AED; width: 22px; border-radius: 4px; }
+
+/* --- Games ------------------------------------------------------------------ */
+.game-play-area { text-align: center; padding: 10px 0; }
+.game-prompt {
+  font-size: 22px; font-weight: 800; color: #4c1d95;
+  margin: 18px 0 22px; line-height: 1.4;
+}
+.game-timer-bar { height: 6px; background: #ede9fe; border-radius: 3px; overflow: hidden; }
+.game-timer-fill {
+  height: 100%; background: linear-gradient(90deg, #10b981, #34d399);
+  transition: width 1s linear;
+}
+.game-timer-fill.low { background: linear-gradient(90deg, #ef4444, #f87171); }
+
+.memory-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.memory-tile {
+  aspect-ratio: 1; border-radius: 14px; border: none; cursor: pointer;
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
+  font-size: 26px; display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s; color: transparent; font-family: inherit;
+}
+.memory-tile.flipped { background: #fff; border: 2.5px solid #c4b5fd; color: inherit; }
+.memory-tile.matched { background: #f0fdf4; border: 2.5px solid #22c55e; color: inherit; }
+
+/* --- Shop / badges ---------------------------------------------------------- */
+.reward-card.owned { border: 2px solid #22c55e; }
+.reward-card.unaffordable { opacity: 0.55; }
+.badge-card.locked { opacity: 0.45; }
+.badge-progress-bar {
+  height: 4px; background: #ede9fe; border-radius: 2px;
+  overflow: hidden; margin-top: 8px;
+}
+.badge-progress-fill { height: 100%; background: linear-gradient(90deg,#7C3AED,#A855F7); }
+
+/* --- Weekly chart ----------------------------------------------------------- */
+.week-chart {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 6px; height: 110px; padding: 8px 0;
+}
+.week-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.week-bar-track {
+  width: 100%; height: 80px; background: #f5f3ff;
+  border-radius: 8px; display: flex; align-items: flex-end; overflow: hidden;
+}
+.week-bar {
+  width: 100%; border-radius: 8px; min-height: 4px;
+  background: linear-gradient(180deg, #A855F7, #7C3AED);
+  transition: height 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+.week-col.today .week-bar { background: linear-gradient(180deg,#FDE047,#F59E0B); }
+.week-col.future .week-bar { background: #ede9fe; }
+.week-label { font-size: 10px; font-weight: 700; color: #a78bfa; }
+.week-col.today .week-label { color: #7C3AED; }
+
+/* --- Settings --------------------------------------------------------------- */
+.seg-group {
+  display: inline-flex; background: #ede9fe; border-radius: 12px;
+  padding: 3px; gap: 3px;
+}
+.seg-btn {
+  border: none; background: none; border-radius: 10px; padding: 6px 14px;
+  font-size: 12px; font-weight: 700; color: #7C3AED; cursor: pointer;
+  font-family: inherit; transition: all 0.2s;
+}
+.seg-btn.active { background: #fff; box-shadow: 0 2px 6px rgba(124,58,237,0.12); }
+
+.range-slider {
+  -webkit-appearance: none; appearance: none;
+  width: 120px; height: 6px; border-radius: 3px; background: #ede9fe; outline: none;
+}
+.range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+  background: #7C3AED; cursor: pointer; box-shadow: 0 2px 6px rgba(124,58,237,0.3);
+}
+.range-slider::-moz-range-thumb {
+  width: 20px; height: 20px; border-radius: 50%; background: #7C3AED;
+  cursor: pointer; border: none;
+}
+
+/* --- Connection dot --------------------------------------------------------- */
+.conn-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22c55e; display: inline-block; margin-right: 5px;
+}
+.conn-dot.offline { background: #ef4444; }
+.conn-dot.degraded { background: #f59e0b; }
+
+/* =============================================================================
+   ACCESSIBILITY SETTINGS
+   These are applied as classes on <body> from student_settings. For this user
+   group they are not preferences, they are whether the app is usable at all.
+   ============================================================================= */
+
+body.font-small  { font-size: 14px; }
+body.font-medium { font-size: 16px; }
+body.font-large  { font-size: 19px; }
+body.font-large .glass-card-title { font-size: 19px; }
+body.font-large .speech-bubble,
+body.font-large .quiz-option,
+body.font-large .chat-msg { font-size: 17px; }
+body.font-large .qa-title, body.font-large .sub-name { font-size: 16px; }
+body.font-large .greeting { font-size: 25px; }
+
+/* Bigger hit targets. 56px comfortably clears the 44px accessibility minimum
+   and helps students with motor-control differences. */
+body.larger-buttons .btn-primary,
+body.larger-buttons .btn-secondary { padding: 18px 28px; font-size: 17px; }
+body.larger-buttons .quiz-option { padding: 22px 24px; min-height: 68px; }
+body.larger-buttons .nav-item { padding: 10px 18px; }
+body.larger-buttons .qa-card { padding: 26px 16px; }
+body.larger-buttons .voice-btn { width: 64px; height: 64px; }
+body.larger-buttons .top-icon-btn,
+body.larger-buttons .top-bar-back { width: 48px; height: 48px; }
+
+/* High contrast.
+   Much of the design sets colour and gradients via inline style attributes,
+   which beat ordinary class rules. `!important` in a stylesheet outranks a
+   plain inline style, so these rules use it deliberately — this is the one
+   mode where overriding the design wholesale is the correct behaviour.
+   Target is WCAG AAA: black on white, 2.5px borders, no translucency. */
+
+body.high-contrast {
+  background: #fff !important;
+  color: #000 !important;
+}
+
+/* Every text node goes black unless a rule below says otherwise. */
+body.high-contrast .souly-app div,
+body.high-contrast .souly-app span,
+body.high-contrast .souly-app p,
+body.high-contrast .souly-app h1,
+body.high-contrast .souly-app h2,
+body.high-contrast .souly-app h3,
+body.high-contrast .souly-app input,
+body.high-contrast .souly-app label {
+  color: #000 !important;
+}
+
+/* Cards: opaque white, hard black border, no blur or shadow. Includes the
+   ones whose background is an inline gradient. */
+body.high-contrast .glass-card,
+body.high-contrast .qa-card,
+body.high-contrast .subject-card,
+body.high-contrast .game-card,
+body.high-contrast .badge-card,
+body.high-contrast .reward-card,
+body.high-contrast .setting-item,
+body.high-contrast .badge-pill,
+body.high-contrast .speech-bubble,
+body.high-contrast .stars-modal {
+  background: #fff !important;
+  background-image: none !important;
+  border: 2.5px solid #000 !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: #000 !important;
+}
+
+/* Secondary text stays distinguishable but still clears AAA on white. */
+body.high-contrast .greeting-sub,
+body.high-contrast .glass-card-sub,
+body.high-contrast .qa-desc,
+body.high-contrast .top-bar-sub,
+body.high-contrast .sub-level,
+body.high-contrast .badge-desc,
+body.high-contrast .week-label,
+body.high-contrast .chat-source { color: #3a3a3a !important; }
+
+/* Buttons */
+body.high-contrast .btn-primary {
+  background: #000 !important;
+  background-image: none !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+body.high-contrast .btn-primary span,
+body.high-contrast .btn-primary div { color: #fff !important; }
+body.high-contrast .btn-secondary,
+body.high-contrast .top-icon-btn,
+body.high-contrast .top-bar-back,
+body.high-contrast .speak-btn,
+body.high-contrast .seg-btn {
+  background: #fff !important;
+  border: 2px solid #000 !important;
+  color: #000 !important;
+}
+body.high-contrast .seg-btn.active {
+  background: #000 !important;
+  color: #fff !important;
+}
+body.high-contrast .voice-btn {
+  background: #000 !important;
+  background-image: none !important;
+  color: #fff !important;
+  animation: none !important;
+}
+body.high-contrast .voice-btn.recording {
+  background: #c00 !important; background-image: none !important;
+}
+
+/* Answer options. Correct and wrong are distinguished by border weight and a
+   colour that still reads at AAA — never by colour alone, since colour
+   blindness and high-contrast need often occur together. */
+body.high-contrast .quiz-option {
+  background: #fff !important;
+  border-color: #000 !important;
+  color: #000 !important;
+}
+body.high-contrast .quiz-option .opt-letter {
+  background: #fff !important; border: 2px solid #000; color: #000 !important;
+}
+body.high-contrast .quiz-option.correct {
+  background: #fff !important; border-color: #006400 !important; border-width: 4px !important;
+}
+body.high-contrast .quiz-option.correct .opt-letter {
+  background: #006400 !important; color: #fff !important;
+}
+body.high-contrast .quiz-option.wrong {
+  background: #fff !important; border-color: #a00000 !important; border-width: 4px !important;
+  border-style: dashed !important;
+}
+body.high-contrast .quiz-option.wrong .opt-letter {
+  background: #a00000 !important; color: #fff !important;
+}
+
+/* Progress indicators */
+body.high-contrast .progress-bar-bg,
+body.high-contrast .sub-bar,
+body.high-contrast .badge-progress-bar,
+body.high-contrast .week-bar-track {
+  background: #fff !important; border: 1.5px solid #000;
+}
+body.high-contrast .progress-bar-fill,
+body.high-contrast .sub-bar-fill,
+body.high-contrast .badge-progress-fill,
+body.high-contrast .week-bar {
+  background: #000 !important; background-image: none !important;
+}
+body.high-contrast .circle-progress-fill { stroke: #000 !important; }
+body.high-contrast .circle-progress-bg { stroke: #d0d0d0 !important; }
+
+/* Toggles: state must be readable without relying on the purple fill. */
+body.high-contrast .toggle {
+  background: #fff !important; background-image: none !important;
+  border: 2.5px solid #000;
+}
+body.high-contrast .toggle.on { background: #000 !important; }
+body.high-contrast .toggle-knob { background: #fff !important; border: 1.5px solid #000; }
+body.high-contrast .toggle.on .toggle-knob { background: #fff !important; }
+
+/* Chat */
+body.high-contrast .chat-msg.user {
+  background: #000 !important; background-image: none !important; color: #fff !important;
+}
+body.high-contrast .chat-msg.user span,
+body.high-contrast .chat-msg.user div { color: #fff !important; }
+body.high-contrast .chat-msg.bot {
+  background: #fff !important; background-image: none !important;
+  border: 2px solid #000; color: #000 !important;
+}
+
+/* Chrome */
+body.high-contrast .bottom-nav {
+  background: #fff !important; border-top: 2.5px solid #000; backdrop-filter: none !important;
+}
+body.high-contrast .nav-item { color: #444 !important; }
+body.high-contrast .nav-item.active {
+  color: #000 !important; background: #eaeaea !important; font-weight: 800;
+}
+body.high-contrast .input-field {
+  background: #fff !important; border-color: #000 !important; color: #000 !important;
+}
+body.high-contrast .streak-badge {
+  background: #fff !important; background-image: none !important;
+  border: 2px solid #000; color: #000 !important;
+}
+body.high-contrast .game-badge,
+body.high-contrast .badge-status {
+  background: #fff !important; border: 1.5px solid #000; color: #000 !important;
+}
+body.high-contrast .robot-eye { background: #000 !important; box-shadow: none !important; }
+body.high-contrast .robot-smile { border-bottom-color: #000 !important; }
+body.high-contrast .toast {
+  background: #000 !important; background-image: none !important; color: #fff !important;
+}
+body.high-contrast .memory-tile {
+  background: #fff !important; background-image: none !important;
+  border: 2.5px solid #000; color: #000 !important;
+}
+body.high-contrast .range-slider { background: #fff !important; border: 1.5px solid #000; }
+body.high-contrast .range-slider::-webkit-slider-thumb {
+  background: #000 !important; box-shadow: none !important;
+}
+body.high-contrast .range-slider::-moz-range-thumb { background: #000 !important; }
+
+/* Respect reduce-motion both from the setting and from the OS. Vestibular
+   sensitivity is common alongside autism, and the app has a lot of movement. */
+body.reduce-motion *,
+body.reduce-motion *::before,
+body.reduce-motion *::after {
+  animation-duration: 0.001s !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001s !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+  }
+}
+
+body.theme-dark {
+  background: linear-gradient(180deg, #1e1b31 0%, #2a2440 40%, #1e1b31 100%);
+  color: #e9e4ff;
+}
+body.theme-dark .glass-card,
+body.theme-dark .qa-card,
+body.theme-dark .subject-card,
+body.theme-dark .game-card,
+body.theme-dark .badge-card,
+body.theme-dark .reward-card,
+body.theme-dark .setting-item {
+  background: rgba(52,45,80,0.85);
+  border-color: rgba(168,85,247,0.18);
+}
+body.theme-dark .greeting,
+body.theme-dark .glass-card-title,
+body.theme-dark .section-title,
+body.theme-dark .top-bar-title,
+body.theme-dark .qa-title,
+body.theme-dark .sub-name,
+body.theme-dark .setting-name { color: #e9e4ff; }
+body.theme-dark .speech-bubble {
+  background: linear-gradient(135deg,#3b3358,#312b4d); color: #e9e4ff;
+}
+body.theme-dark .quiz-option { background: #322c4d; border-color: #443c66; color: #e9e4ff; }
+body.theme-dark .bottom-nav { background: rgba(30,27,49,0.95); }
+body.theme-dark .input-field { background: #322c4d; border-color: #443c66; color: #e9e4ff; }
+
+body.theme-purple {
+  background: linear-gradient(180deg, #ede9fe 0%, #ddd6fe 40%, #e9d5ff 100%);
+}
+
+/* Screen-reader-only text: labels for icon buttons that would otherwise be
+   announced as nothing at all. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* Keyboard focus must always be visible. The original design removed outlines
+   via the tap-highlight reset; a student navigating by keyboard or switch
+   device needs to see where they are. */
+:focus-visible {
+  outline: 3px solid #7C3AED !important;
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* A subject with no lessons loaded. Dimmed and inert rather than hidden, so
+   the student can see the subject exists and is simply not ready yet. */
+.subject-card.unavailable {
+  opacity: 0.5;
+  cursor: default;
+}
+.subject-card.unavailable:hover { transform: none; box-shadow: 0 4px 16px rgba(124,58,237,0.06); }
+.subject-card.unavailable .sub-btn { opacity: 0.6; cursor: not-allowed; }
+
+
+/* =============================================================================
+   LANDSCAPE SHELL
+   -----------------------------------------------------------------------------
+   The app is built for a tablet on its side, mounted in the robot's shell.
+
+   This isn't only a layout preference. Schroeder & Cenkci (2018) meta-analysed
+   58 comparisons and found integrating related material spatially beats
+   separating it at g = 0.63 — a large effect. In portrait, asking Souly a
+   question meant leaving the lesson for a different screen, which is textbook
+   split attention: the child has to hold the explanation in working memory
+   while looking somewhere else.
+
+   Landscape keeps the explanation and Souly side by side, so the question is
+   asked ABOUT the thing still on screen.
+   ============================================================================= */
+
+.souly-app {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: 100%;
+  height: 100dvh;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.stage {
+  position: relative;
+  overflow: hidden;
+  min-height: 0;      /* lets the grid row actually shrink */
+}
+
+.souly-app .page {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 14px clamp(14px, 3vw, 32px);
+  display: none;
+}
+.souly-app .page.active { display: block; }
+
+/* Pages that fill the viewport rather than scrolling as a document. */
+.souly-app .page.split { display: none; }
+.souly-app .page.split.active { display: flex; flex-direction: column; overflow: hidden; }
+
+
+/* --- Session plan strip ------------------------------------------------------
+   A visual schedule: what today holds, what's done, what's next. Answers the
+   TEACCH questions — what, how much, when finished, what next — without the
+   child having to ask.
+   --------------------------------------------------------------------------- */
+.plan-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px clamp(14px, 3vw, 32px);
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(124,58,237,0.08);
+  min-height: 46px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.plan-strip::-webkit-scrollbar { display: none; }
+
+.plan-label {
+  font-size: 11px; font-weight: 800; color: #a78bfa;
+  text-transform: uppercase; letter-spacing: 0.06em; flex-shrink: 0;
+}
+.plan-item {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; color: #7C3AED;
+  background: #f5f3ff; border: 1.5px solid transparent;
+  white-space: nowrap; flex-shrink: 0;
+}
+.plan-item.done { color: #15803d; background: #f0fdf4; }
+.plan-item.done .plan-text { text-decoration: line-through; opacity: 0.75; }
+.plan-item.current { border-color: #7C3AED; background: #fff; }
+.plan-spacer { flex: 1; min-width: 8px; }
+
+.plan-stat {
+  font-size: 12px; font-weight: 800; color: #7C3AED;
+  flex-shrink: 0; padding-left: 8px;
+}
+
+
+/* --- Navigation rail ---------------------------------------------------------
+   Bottom bar in portrait, left rail in landscape. Four destinations, not five:
+   Souly is no longer a place you go.
+   --------------------------------------------------------------------------- */
+.rail {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(124,58,237,0.08);
+}
+.rail-item {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 6px 16px; border: none; background: none; cursor: pointer;
+  color: #a78bfa; font-family: inherit; border-radius: 12px;
+  transition: all 0.2s; min-width: 64px;
+}
+.rail-item svg { width: 22px; height: 22px; }
+.rail-item span { font-size: 10px; font-weight: 700; }
+.rail-item.active { color: #7C3AED; background: rgba(124,58,237,0.08); }
+.rail-item:hover { background: rgba(124,58,237,0.06); }
+
+
+/* --- The two-pane lesson ----------------------------------------------------- */
+.split-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  min-height: 0;
+  padding: 12px clamp(14px, 3vw, 32px) 14px;
+  overflow: hidden;
+}
+
+.pane {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.pane-content { gap: 12px; }
+
+/* Souly's pane. Sticky on the right so help is always one tap away and never
+   requires navigating anywhere. */
+.pane-souly {
+  background: rgba(255,255,255,0.8);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-radius: 22px;
+  border: 1px solid rgba(124,58,237,0.08);
+  padding: 16px;
+  gap: 12px;
+}
+
+/* --- Landscape ---------------------------------------------------------------
+   Two panes side by side. 58/42 keeps the reading measure sensible while
+   leaving Souly enough room for a real answer.
+   --------------------------------------------------------------------------- */
+@media (min-width: 720px) and (orientation: landscape) {
+  .souly-app { grid-template-columns: auto 1fr; grid-template-rows: auto 1fr; }
+  .plan-strip { grid-column: 1 / -1; }
+
+  .rail {
+    grid-row: 2;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 6px;
+    padding: 14px 8px;
+    border-top: none;
+    border-right: 1px solid rgba(124,58,237,0.08);
+    width: 86px;
+  }
+  .rail-item { width: 100%; padding: 12px 4px; }
+  .rail-item svg { width: 24px; height: 24px; }
+
+  .stage { grid-row: 2; grid-column: 2; }
+
+  .split-body { grid-template-columns: 58fr 42fr; }
+}
+
+/* Wide screens: cap the reading measure. The British Dyslexia Association
+   puts the comfortable line length at 60-70 characters, and landscape makes
+   over-long lines the default failure mode. */
+@media (min-width: 1200px) {
+  .split-body { grid-template-columns: 55fr 45fr; }
+  .lesson-body { max-width: 62ch; }
+}
+
+/* Portrait: stack, and suggest turning the device. */
+.rotate-hint {
+  display: none;
+  position: fixed; inset: 0; z-index: 400;
+  background: linear-gradient(180deg, #f8f6ff, #ede9fe);
+  flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+}
+.rotate-icon { font-size: 64px; animation: bounce 2s ease-in-out infinite; }
+.rotate-text { font-size: 18px; font-weight: 800; color: #4c1d95; }
+
+@media (orientation: portrait) and (max-width: 900px) {
+  /* Not a hard block — a student on a phone should still be able to work.
+     The hint appears only where the two-pane layout genuinely can't fit. */
+  .split-body { grid-template-columns: 1fr; }
+  .pane-souly { position: sticky; bottom: 0; }
+}
+
+
+/* --- Lesson content ---------------------------------------------------------- */
+.lesson-visual {
+  font-size: clamp(48px, 9vw, 92px);
+  text-align: center;
+  line-height: 1;
+  margin: 4px 0 10px;
+}
+.lesson-visual img { max-width: 100%; max-height: 30vh; border-radius: 18px; }
+
+/* ---------------------------------------------------------------------------
+   THE VISUAL
+
+   Drawn from a spec, in these colours, at this scale — so it belongs to the
+   same family as the interface icons rather than looking like something
+   pasted in. Every kind animates in gently: movement that shows the parts
+   arriving in order, not movement for its own sake.
+
+   This replaced the scanned book page, which was the source rather than the
+   teaching and was unreadable shrunk into half a pane.
+   --------------------------------------------------------------------------- */
+/* Above the words and larger than them, on purpose. For these children the
+   picture carries more than the sentences do. */
+.visual {
+  margin: 0 0 18px;
+  padding: 16px;
+  background: linear-gradient(160deg, #fbfaff, #f5f3ff);
+  border: 1px solid #ede9fe;
+  border-radius: 20px;
+  animation: bubbleIn .28s ease-out;
+}
+.visual-title {
+  font-size: 13px; font-weight: 800; color: #6d28d9;
+  margin-bottom: 10px; text-align: center;
+}
+.visual-body { display: flex; flex-direction: column; align-items: center; }
+.visual-svg { width: 100%; max-width: 560px; height: auto; overflow: visible; }
+.visual-readout {
+  margin-top: 10px; font-size: 15px; font-weight: 800; color: #4c1d95;
+}
+/* What the picture is FOR. Present on every visual, because a picture with
+   no stated job is decoration. */
+.visual-purpose {
+  margin-top: 12px; font-size: 13px; line-height: 1.5;
+  font-weight: 600; color: #7c6bb0; text-align: center;
+}
+
+.vis-mark { animation: bubbleIn .3s ease-out both; }
+
+/* Place value — the book's own chart. */
+.pv-table { border-collapse: separate; border-spacing: 4px; }
+.pv-table th {
+  font-size: 10px; font-weight: 800; color: #a78bfa; padding: 2px 6px;
+  text-transform: uppercase; letter-spacing: .03em;
+}
+.pv-table td {
+  font-size: clamp(20px, 3vw, 30px); font-weight: 800; color: #4c1d95;
+  background: #fff; border: 2px solid #ede9fe; border-radius: 10px;
+  width: 48px; height: 56px; text-align: center;
+}
+.pv-table th.on { color: #7C3AED; }
+.pv-table td.on { background: #7C3AED; border-color: #7C3AED; color: #fff; }
+.pv-table .pv-dot {
+  border: none; background: none; width: 14px;
+  font-size: 30px; color: #7C3AED; vertical-align: bottom; padding: 0;
+}
+
+/* Bars. */
+.vis-bars { width: 100%; max-width: 460px; display: grid; gap: 10px; }
+.vis-bar-row { display: grid; grid-template-columns: 88px 1fr 52px; gap: 10px; align-items: center; }
+.vis-bar-label { font-size: 13px; font-weight: 700; color: #4c1d95; }
+.vis-bar-track { height: 24px; background: #fff; border: 2px solid #ede9fe; border-radius: 999px; overflow: hidden; }
+.vis-bar-fill {
+  display: block; height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, #7C3AED, #A855F7);
+  animation: growWidth .5s ease-out both;
+}
+.vis-bar-value { font-size: 14px; font-weight: 800; color: #6d28d9; text-align: right; }
+@keyframes growWidth { from { transform: scaleX(0); transform-origin: left; } to { transform: none; } }
+
+/* Steps and parts. */
+.vis-steps, .vis-parts { width: 100%; max-width: 460px; display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.vis-steps li, .vis-parts li {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: #fff; border: 1px solid #ede9fe; border-radius: 14px; padding: 10px 12px;
+  animation: bubbleIn .3s ease-out both;
+}
+.vis-steps strong, .vis-parts strong { font-size: 14px; font-weight: 800; color: #4c1d95; display: block; }
+.vis-steps em, .vis-parts em { font-style: normal; font-size: 13px; color: #7c6bb0; font-weight: 500; }
+.vis-step-num {
+  flex-shrink: 0; width: 26px; height: 26px; border-radius: 9px;
+  background: linear-gradient(135deg, #7C3AED, #A855F7); color: #fff;
+  font-size: 13px; font-weight: 800; display: grid; place-items: center;
+}
+.vis-dot {
+  flex-shrink: 0; width: 12px; height: 12px; border-radius: 50%;
+  background: #A855F7; margin-top: 5px;
+}
+
+/* The generated picture. No text in the image itself — every word around it
+   is drawn here, where it is right.
+
+   It drifts slowly rather than sitting still. A real animation would mean a
+   video model: seconds per page, a cost per child, and a file to ship over a
+   competition MiFi. A slow drift on a still costs nothing and does the job a
+   moving picture does here, which is to hold a child's eye on it. */
+.vis-illustration {
+  width: 100%; max-width: 460px; margin-bottom: 4px;
+  border-radius: 18px; overflow: hidden;
+  border: 1px solid #ede9fe;
+  box-shadow: 0 8px 28px rgba(76, 29, 149, .10);
+  background: #fff;
+}
+.vis-illustration img {
+  width: 100%; height: auto; display: block;
+  animation: drift 18s ease-in-out infinite alternate,
+             bubbleIn .35s ease-out;
+  transform-origin: center;
+}
+@keyframes drift {
+  from { transform: scale(1.00) translate3d(0, 0, 0); }
+  to   { transform: scale(1.06) translate3d(-1.5%, -1%, 0); }
+}
+
+/* Being drawn. The wait should read as something happening. */
+.vis-illustration.loading {
+  min-height: 200px;
+  background: linear-gradient(100deg, #f5f3ff 30%, #ede9fe 50%, #f5f3ff 70%);
+  background-size: 300% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+.vis-illustration.loading img { opacity: 0; }
+@keyframes shimmer {
+  from { background-position: 130% 0; }
+  to   { background-position: -30% 0; }
+}
+
+/* A child who has asked for less movement gets less movement. */
+@media (prefers-reduced-motion: reduce) {
+  .vis-illustration img { animation: none; }
+  .vis-illustration.loading { animation: none; }
+}
+
+/* What was changed for this child. Visible on purpose: a claim about
+   personalisation that nobody can see is a claim nobody can check, and this
+   one quietly stopped being true once before. */
+.adapted-strip {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  margin: 0 0 12px;
+}
+.adapted-label {
+  font-size: 11px; font-weight: 800; color: #a78bfa;
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.adapted-chip {
+  font-size: 11px; font-weight: 700; color: #6d28d9;
+  background: #f5f3ff; border: 1px solid #ede9fe;
+  border-radius: 999px; padding: 3px 9px;
+}
+
+/* Where this page came from. Small, always present: it is what makes
+   "we teach the Ministry curriculum" something a person can check. */
+.lesson-source {
+  font-size: 12px;
+  font-weight: 700;
+  color: #a78bfa;
+  text-align: center;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.lesson-heading {
+  font-size: clamp(19px, 2.4vw, 26px);
+  font-weight: 800;
+  color: #4c1d95;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+
+.lesson-body {
+  font-size: clamp(17px, 2vw, 21px);
+  line-height: 1.75;
+  color: #3b2a63;
+  font-weight: 500;
+  /* Letter spacing has the strongest experimental support of any dyslexia
+     typography tweak: Zorzi et al. (PNAS 2012) found extra inter-letter
+     spacing improved reading speed and roughly halved errors in dyslexic
+     children, with no training. */
+  letter-spacing: 0.012em;
+  word-spacing: 0.06em;
+  text-align: left;   /* never justified */
+}
+
+/* Word-level highlighting while Souly reads. Synchronising the two channels
+   means they index each other instead of competing — the difference between
+   read-aloud helping and read-aloud being redundant. */
+.lesson-body .w { transition: background-color 0.12s, color 0.12s; border-radius: 4px; }
+.lesson-body .w.spoken { background: #ede9fe; }
+.lesson-body .w.now { background: #7C3AED; color: #fff; }
+
+.key-terms { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.key-term {
+  font-size: 13px; font-weight: 800; color: #7C3AED;
+  background: #f5f3ff; border: 1.5px solid #ddd6fe;
+  padding: 6px 14px; border-radius: 14px;
+}
+
+.step-nav { display: flex; gap: 10px; margin-top: auto; padding-top: 14px; }
+.step-nav .btn-primary, .step-nav .btn-secondary { flex: 1; justify-content: center; }
+.step-nav .btn-primary { flex: 2; }
+
+
+/* --- Souly's pane ------------------------------------------------------------ */
+.souly-head { display: flex; align-items: center; gap: 10px; }
+.souly-name { font-size: 15px; font-weight: 800; color: #4c1d95; }
+.souly-state { font-size: 11px; font-weight: 600; color: #a78bfa; }
+
+/* The conversation.
+
+   Appended to, never overwritten. A child needs to see what they asked in
+   order for the answer to read as an answer — and to ask a second thing
+   without it feeling like starting over. The pane scrolls; the buttons and
+   the ask box below it stay put. */
+.souly-thread {
+  flex: 1;
+  min-height: 64px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+  scroll-behavior: smooth;
+}
+
+.bubble {
+  border-radius: 18px;
+  padding: 13px 16px;
+  font-size: clamp(14px, 1.5vw, 16px);
+  line-height: 1.65;
+  font-weight: 500;
+  max-width: 92%;
+  animation: bubbleIn 0.22s ease-out;
+  word-break: break-word;
+}
+
+.bubble.souly {
+  background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+  border-bottom-left-radius: 4px;
+  color: #4c1d95;
+  align-self: flex-start;
+}
+
+/* The child's own words, mirrored to the other side so the two speakers are
+   never confusable — which matters more than it sounds for a reader who is
+   already working hard. */
+.bubble.student {
+  background: linear-gradient(135deg, #7C3AED, #A855F7);
+  border-bottom-right-radius: 4px;
+  color: #fff;
+  align-self: flex-end;
+}
+
+.bubble.offer { border: 2px solid #c4b5fd; background: #fff; }
+.bubble.typing { padding: 16px; }
+
+/* One chunk of the lesson. Three of these, about twenty words each, is the
+   whole lesson — separated so they read as three small things rather than as
+   one block of text, which is the difference between a child reading it and
+   a child giving up on it. */
+.lesson-para {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #f1edff;
+  border-left: 4px solid #A855F7;
+  border-radius: 14px;
+}
+.lesson-para:last-child { margin-bottom: 0; }
+
+/* A picture the child asked for, inside the reply that promised it. */
+.bubble-drawing { margin-top: 10px; }
+.bubble-drawing img {
+  width: 100%; display: block; border-radius: 14px;
+  border: 1px solid #ede9fe; background: #fff;
+}
+
+.bubble-actions { display: flex; gap: 8px; margin-top: 10px; }
+.bubble-actions .btn-secondary { flex: 1; }
+
+@keyframes bubbleIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Kept for anything still rendering the old single-message panel. */
+.souly-say {
+  background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+  border-radius: 18px 18px 18px 4px;
+  padding: 14px 16px;
+  font-size: clamp(14px, 1.5vw, 16px);
+  line-height: 1.65;
+  color: #4c1d95;
+  font-weight: 500;
+  min-height: 64px;
+  flex: 1;
+  overflow-y: auto;
+}
+.souly-say.offer { border: 2px solid #c4b5fd; background: #fff; }
+
+/* The three help buttons.
+   Fixed buttons, not a blank text box. A blank box asks the child to
+   formulate an unscripted question, which is precisely the barrier that stops
+   autistic students asking for help: Grainger et al. (2016) found their
+   monitoring-to-action link is measurably weaker, and the camouflaging
+   literature documents active concealment of difficulty at school.
+   Always visible, so using one signals nothing. */
+.help-buttons { display: grid; gap: 8px; }
+.help-btn {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; text-align: left;
+  background: #fff; border: 2px solid #ede9fe; border-radius: 14px;
+  padding: 12px 14px; cursor: pointer; font-family: inherit;
+  font-size: 14px; font-weight: 700; color: #4c1d95;
+  transition: all 0.18s;
+}
+.help-btn:hover { border-color: #c4b5fd; background: #faf8ff; }
+.help-btn:disabled { opacity: 0.5; cursor: wait; }
+.help-btn .help-ico { font-size: 20px; flex-shrink: 0; }
+
+.ask-row { display: flex; gap: 8px; align-items: center; }
+.ask-row .input-field { font-size: 14px; padding: 11px 14px; min-width: 0; }
+.ask-row .voice-btn { width: 44px; height: 44px; flex-shrink: 0; }
+
+
+/* --- Hint ladder -------------------------------------------------------------
+   nudge -> worked example -> step-through -> answer.
+
+   Souly cannot skip to the end. Bastani et al. (PNAS 2025): students given an
+   AI that answered on request scored 17% BELOW students with no AI at all on
+   a later unaided exam. Hints, not answers.
+
+   Help never costs stars. Penalising help teaches a struggling child to stop
+   asking for it.
+   --------------------------------------------------------------------------- */
+/* On the practice screen the ladder IS the thread, so a clue and the answer
+   to a typed question land in the same conversation, in the order they
+   happened, rather than in two panels that don't know about each other. */
+.hint-ladder { display: flex; flex-direction: column; gap: 8px; }
+
+.hint-step {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: #f5f3ff; border-radius: 14px; padding: 12px 14px;
+  animation: slideInRight 0.3s ease-out;
+}
+.hint-tier-badge {
+  width: 24px; height: 24px; border-radius: 8px; flex-shrink: 0;
+  background: #7C3AED; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 800;
+}
+.hint-text { font-size: 14px; line-height: 1.6; color: #4c1d95; font-weight: 500; }
+
+.hint-more {
+  width: 100%; border: 2px dashed #ddd6fe; background: none;
+  border-radius: 14px; padding: 11px; cursor: pointer; font-family: inherit;
+  font-size: 13px; font-weight: 700; color: #7C3AED; transition: all 0.2s;
+}
+.hint-more:hover { background: #faf8ff; border-color: #c4b5fd; }
+.hint-free-note { font-size: 11px; color: #a78bfa; font-weight: 600; text-align: center; }
+
+
+/* --- Learning path -----------------------------------------------------------
+   Replaces the 2-column icon grid. Bigger cards, real artwork, and — the point
+   — the SEQUENCE is visible: what's done, what's now, what's next.
+   That doubles as a predictability support. Intolerance of uncertainty
+   correlates with anxiety at r = .62 in autistic people (Jenkinson et al.
+   2020); being able to see what's coming is not decoration.
+   --------------------------------------------------------------------------- */
+.subject-rail { display: flex; gap: 10px; overflow-x: auto; padding: 4px 0 10px; scrollbar-width: none; }
+.subject-rail::-webkit-scrollbar { display: none; }
+
+.subject-chip {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding: 10px 16px; border-radius: 16px; cursor: pointer;
+  background: #fff; border: 2px solid #ede9fe; font-family: inherit;
+  font-size: 14px; font-weight: 700; color: #4c1d95; transition: all 0.2s;
+}
+.subject-chip .chip-ico { font-size: 22px; }
+.subject-chip .chip-pct { font-size: 12px; font-weight: 800; color: #a78bfa; }
+.subject-chip.active { border-color: #7C3AED; background: #f5f3ff; }
+.subject-chip.empty { opacity: 0.45; cursor: default; }
+
+.path {
+  display: flex; gap: 0; overflow-x: auto; padding: 20px 4px 24px;
+  align-items: stretch; scrollbar-width: thin;
+}
+.path-node { display: flex; align-items: center; flex-shrink: 0; }
+
+.path-card {
+  width: 210px; min-height: 230px;
+  display: flex; flex-direction: column;
+  background: #fff; border-radius: 22px; padding: 16px;
+  border: 2px solid rgba(124,58,237,0.08);
+  box-shadow: 0 4px 18px rgba(124,58,237,0.07);
+  cursor: pointer; transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  text-align: left; font-family: inherit;
+}
+.path-card:hover { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(124,58,237,0.14); }
+.path-card.current { border-color: #7C3AED; box-shadow: 0 8px 26px rgba(124,58,237,0.2); }
+.path-card.done { border-color: #86efac; }
+.path-card.locked { opacity: 0.5; cursor: default; }
+.path-card.locked:hover { transform: none; }
+
+.path-art {
+  height: 84px; border-radius: 16px; margin-bottom: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px; overflow: hidden; flex-shrink: 0;
+}
+.path-art img { width: 100%; height: 100%; object-fit: cover; }
+
+.path-title { font-size: 15px; font-weight: 800; color: #4c1d95; line-height: 1.35; }
+.path-sub { font-size: 12px; color: #a78bfa; font-weight: 600; margin-top: 4px; }
+
+/* Which book this path comes out of. */
+.path-book {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7c6bb0;
+  margin: -6px 0 12px 2px;
+}
+.path-foot { margin-top: auto; padding-top: 12px; }
+.path-status {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 12px;
+}
+.path-status.done { background: #dcfce7; color: #15803d; }
+.path-status.current { background: #ede9fe; color: #7C3AED; }
+.path-status.todo { background: #f5f5f7; color: #6b7280; }
+
+.path-link {
+  width: 34px; height: 3px; background: #ddd6fe; flex-shrink: 0;
+  align-self: center;
+}
+.path-link.done { background: #86efac; }
+
+
+/* --- Practice ----------------------------------------------------------------- */
+.practice-question {
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 700; color: #4c1d95; line-height: 1.5; margin-bottom: 6px;
+}
+.practice-origin {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.05em;
+  text-transform: uppercase; color: #a78bfa; margin-bottom: 12px;
+}
+.practice-origin .gen { color: #7C3AED; background: #ede9fe; padding: 2px 8px; border-radius: 10px; }
+
+
+/* --- Misc --------------------------------------------------------------------- */
+.section-title-sm {
+  font-size: 13px; font-weight: 800; color: #a78bfa;
+  text-transform: uppercase; letter-spacing: 0.06em; margin: 16px 0 10px;
+}
+
+.card-row { display: flex; gap: 14px; flex-wrap: wrap; }
+.card-row > * { flex: 1 1 260px; }
+
+.continue-card {
+  display: flex; align-items: center; gap: 18px;
+  background: linear-gradient(135deg, rgba(124,58,237,0.08), rgba(168,85,247,0.05));
+  border-radius: 24px; padding: 20px;
+  border: 1px solid rgba(255,255,255,0.6);
+}
+.continue-art { font-size: 56px; flex-shrink: 0; }
+
+
+/* =============================================================================
+   SIGN-IN — the picker and the picture password
+   ============================================================================= */
+
+.gate {
+  position: fixed; inset: 0; z-index: 500;
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #f8f6ff 0%, #ede9fe 50%, #f5f3ff 100%);
+  padding: 24px; overflow-y: auto;
+}
+.gate.active { display: flex; }
+
+.gate-brand { font-size: 34px; font-weight: 800; color: #4c1d95; letter-spacing: -0.02em; }
+.gate-sub { font-size: 15px; color: #a78bfa; font-weight: 600; margin-top: 6px; }
+.gate-title { font-size: 24px; font-weight: 800; color: #4c1d95; margin-bottom: 6px; text-align: center; }
+.gate-hint { font-size: 14px; color: #a78bfa; font-weight: 600; margin-bottom: 22px; text-align: center; max-width: 30rem; line-height: 1.6; }
+
+/* --- The Netflix-style tile row ---------------------------------------------- */
+.profile-row {
+  display: flex; flex-wrap: wrap; gap: 22px;
+  justify-content: center; margin-top: 30px; max-width: 900px;
+}
+
+.profile-tile {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  background: none; border: none; cursor: pointer; font-family: inherit;
+  padding: 8px; border-radius: 20px;
+  transition: transform 0.28s cubic-bezier(0.34,1.4,0.64,1), opacity 0.35s;
+}
+.profile-tile:hover { transform: scale(1.07); }
+.profile-tile:focus-visible { outline: 3px solid #7C3AED; outline-offset: 4px; }
+
+.profile-face {
+  width: 128px; height: 128px; border-radius: 28px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 66px; box-shadow: 0 8px 26px rgba(76,29,149,0.16);
+  border: 4px solid transparent; transition: border-color 0.25s, box-shadow 0.25s;
+}
+.profile-tile:hover .profile-face { border-color: rgba(255,255,255,0.9); box-shadow: 0 12px 34px rgba(76,29,149,0.24); }
+.profile-name { font-size: 17px; font-weight: 800; color: #4c1d95; }
+.profile-flag { font-size: 11px; font-weight: 700; color: #a78bfa; }
+.profile-tile.locked { opacity: 0.4; cursor: not-allowed; }
+.profile-tile.locked:hover { transform: none; }
+
+/* The others fade away when one is chosen. */
+.profile-row.choosing .profile-tile { opacity: 0; transform: scale(0.8); pointer-events: none; }
+.profile-row.choosing .profile-tile.chosen { opacity: 1; transform: scale(1.12); }
+
+/* --- Picture password grid ---------------------------------------------------- */
+.pic-grid {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
+  max-width: 620px; width: 100%;
+}
+@media (max-width: 700px) { .pic-grid { grid-template-columns: repeat(4, 1fr); } }
+
+.pic-btn {
+  aspect-ratio: 1; border-radius: 20px; border: 3px solid #ede9fe;
+  background: #fff; font-size: 40px; cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.18s; position: relative;
+}
+.pic-btn:hover { border-color: #c4b5fd; transform: translateY(-3px); }
+.pic-btn.picked { border-color: #7C3AED; background: #f5f3ff; }
+.pic-btn .pick-order {
+  position: absolute; top: -8px; right: -8px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #7C3AED; color: #fff;
+  font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* The three slots being filled. Shows progress without revealing anything. */
+.pic-slots { display: flex; gap: 14px; margin: 22px 0; }
+.pic-slot {
+  width: 66px; height: 66px; border-radius: 18px;
+  border: 3px dashed #ddd6fe; background: rgba(255,255,255,0.6);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; transition: all 0.2s;
+}
+.pic-slot.filled { border-style: solid; border-color: #7C3AED; background: #fff; }
+.pic-slot.error { border-color: #ef4444; animation: shake 0.4s; }
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-7px); }
+  75% { transform: translateX(7px); }
+}
+
+.gate-error {
+  color: #b91c1c; font-size: 14px; font-weight: 700;
+  margin-top: 14px; min-height: 22px; text-align: center;
+}
+.gate-actions { display: flex; gap: 12px; margin-top: 22px; }
+
+
+/* =============================================================================
+   THE ENTRY ACTIVITY
+   ============================================================================= */
+
+/* The map, shown before anything starts.
+   Intolerance of uncertainty explains ~45% of sensory-sensitivity variance in
+   autistic children — telling them exactly what's coming is the single
+   cheapest, highest-value thing on this screen. */
+.plan-cards { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; margin: 22px 0; }
+.plan-card {
+  background: #fff; border-radius: 20px; padding: 18px 22px;
+  border: 2px solid #ede9fe; text-align: center; min-width: 140px;
+}
+.plan-card .pc-emoji { font-size: 34px; }
+.plan-card .pc-label { font-size: 14px; font-weight: 800; color: #4c1d95; margin-top: 8px; }
+.plan-card .pc-count { font-size: 12px; color: #a78bfa; font-weight: 600; margin-top: 3px; }
+.plan-card.done { border-color: #86efac; background: #f0fdf4; }
+.plan-card.current { border-color: #7C3AED; }
+
+/* The reasoning items */
+.q-sequence {
+  display: flex; gap: 14px; justify-content: center; align-items: center;
+  flex-wrap: wrap; margin: 24px 0;
+}
+.q-cell {
+  min-width: 76px; height: 76px; padding: 0 10px;
+  border-radius: 18px; background: #fff; border: 2px solid #ede9fe;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px;
+}
+.q-cell.unknown { border-style: dashed; border-color: #c4b5fd; background: #faf8ff; }
+
+.q-analogy { display: flex; align-items: center; gap: 12px; justify-content: center; margin: 24px 0; flex-wrap: wrap; }
+.q-arrow { font-size: 22px; color: #a78bfa; font-weight: 800; }
+
+.q-options { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 10px; }
+.q-option {
+  min-width: 96px; height: 96px; border-radius: 22px;
+  border: 3px solid #ede9fe; background: #fff;
+  font-size: 36px; cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.18s; padding: 0 14px;
+}
+.q-option:hover { border-color: #c4b5fd; transform: translateY(-3px); }
+.q-option.correct { border-color: #22c55e; background: #f0fdf4; }
+.q-option.wrong { border-color: #f59e0b; background: #fffbeb; }
+.q-option.text-option { font-size: 20px; font-weight: 700; color: #4c1d95; min-width: 130px; }
+
+/* A prompt from the fixed ladder. Never generated — the whole score depends on
+   every child getting the same words. */
+.q-prompt {
+  display: flex; gap: 12px; align-items: flex-start;
+  background: linear-gradient(135deg, #f5f3ff, #ede9fe);
+  border-radius: 18px 18px 18px 4px; padding: 14px 18px;
+  margin-top: 18px; font-size: 15px; line-height: 1.6;
+  color: #4c1d95; font-weight: 500; animation: slideInRight 0.3s ease-out;
+  max-width: 34rem;
+}
+
+.reading-passage {
+  background: #fff; border-radius: 20px; padding: 24px 28px;
+  font-size: 19px; line-height: 1.85; color: #3b2a63; font-weight: 500;
+  letter-spacing: 0.012em; max-width: 44ch; margin: 0 auto 18px;
+  border: 2px solid #ede9fe; text-align: left;
+}
+
+.interest-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(126px, 1fr));
+  gap: 12px; max-width: 720px; width: 100%; margin: 18px 0;
+}
+.interest-btn {
+  border-radius: 18px; border: 3px solid #ede9fe; background: #fff;
+  padding: 16px 10px; cursor: pointer; font-family: inherit; text-align: center;
+  transition: all 0.18s;
+}
+.interest-btn:hover { border-color: #c4b5fd; transform: translateY(-3px); }
+.interest-btn.picked { border-color: #7C3AED; background: #f5f3ff; }
+.interest-btn .ib-emoji { font-size: 32px; }
+.interest-btn .ib-label { font-size: 13px; font-weight: 700; color: #4c1d95; margin-top: 6px; }
+
+.pref-options { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+.pref-btn {
+  border-radius: 20px; border: 3px solid #ede9fe; background: #fff;
+  padding: 20px 26px; cursor: pointer; font-family: inherit; min-width: 140px;
+  transition: all 0.18s;
+}
+.pref-btn:hover { border-color: #c4b5fd; transform: translateY(-3px); }
+.pref-btn .pb-emoji { font-size: 34px; }
+.pref-btn .pb-label { font-size: 14px; font-weight: 700; color: #4c1d95; margin-top: 8px; }
+
+/* Skipping is a first-class option and looks like one. A child who can decline
+   doesn't have to refuse. */
+.skip-link {
+  background: none; border: none; color: #a78bfa; font-family: inherit;
+  font-size: 13px; font-weight: 700; cursor: pointer; padding: 10px;
+  text-decoration: underline; margin-top: 14px;
+}
+.skip-link:hover { color: #7C3AED; }
+
+.activity-progress { display: flex; gap: 6px; justify-content: center; margin-bottom: 20px; }
+.ap-dot { width: 9px; height: 9px; border-radius: 50%; background: #ede9fe; }
+.ap-dot.done { background: #c4b5fd; }
+.ap-dot.active { background: #7C3AED; width: 26px; border-radius: 5px; }
+
+.profile-summary {
+  background: #fff; border-radius: 22px; padding: 24px 28px;
+  max-width: 40rem; border: 2px solid #ede9fe; margin: 20px 0;
+  font-size: 15px; line-height: 1.75; color: #4c1d95; font-weight: 500;
+}
+
+body.high-contrast .gate { background: #fff !important; }
+body.high-contrast .profile-face,
+body.high-contrast .pic-btn,
+body.high-contrast .q-option,
+body.high-contrast .interest-btn,
+body.high-contrast .pref-btn,
+body.high-contrast .q-cell {
+  background: #fff !important; background-image: none !important;
+  border-color: #000 !important; color: #000 !important;
+}
+
+
+/* ---------------------------------------------------------------------------
+   THE FACE IN THE CORNER
+
+   The way into the profile. Their own avatar rather than a generic person
+   icon, because a child recognises their own animal instantly and reads a
+   silhouette as nobody.
+   --------------------------------------------------------------------------- */
+.avatar-btn {
+  position: fixed; top: 14px; right: 16px; z-index: 60;
+  width: 52px; height: 52px; border-radius: 50%;
+  border: 2px solid #ede9fe; background: #fff;
+  box-shadow: 0 6px 20px rgba(76, 29, 149, .12);
+  display: grid; place-items: center; cursor: pointer; padding: 0;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.avatar-btn:hover, .avatar-btn:focus-visible {
+  transform: scale(1.06);
+  box-shadow: 0 8px 26px rgba(76, 29, 149, .2);
+}
+.avatar-btn[hidden] { display: none; }
+.avatar-face { font-size: 28px; line-height: 1; }
+.avatar-btn img {
+  width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;
+}
+
+@media (max-width: 640px) {
+  .avatar-btn { width: 44px; height: 44px; top: 10px; right: 10px; }
+  .avatar-face { font-size: 23px; }
+}

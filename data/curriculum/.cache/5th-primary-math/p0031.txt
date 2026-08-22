@@ -1,0 +1,40 @@
+Lesson 5
+b, ¢4.62is between 4.6 and 4.7 @)
+4.65 is the midpoint between the two numbers
+4.6and 47
+° 4,62 is closer to 4.6
+because 0.02 is below the midpoint 462:
+,then(4.62~4.6 sre
+¢, ¢8.765 is between 8.76 and 8.77 (7)
+8.765 is the midpoint between the two numbers
+8.76 and 8.77
+* 8.765 is closer to 8.77 {8765}
+because 0,005 is at the midpoint ~
+then | 8.765 = 8.77
+EE Rounding rule strategy @)
+To round decimals using rounding rule strategy, do as follows:
+1, Underline the digit in the place you want to round the decimal number to it. iw Pay q
+2. Look at the digit to its right and circle it. os K
+=. >>
+cr This circled digit is mar | wes re
+-—— Less thans ——— —~ EqualtoSormore—— | » > 4 Py
+Leave out the circled digit Increase the underlined digit -_—,
+and the other digits to by one, and leave out the 9
+the right. other digits to the right.
+ats
+=
+Example 2
+Use rounding rule strategy to round the decimal number 18.5376 to the nearest whole
+number, Tenth, Hundredth and Thousandth.
+Solution (?)
+. ited =
+© 185376 = 19 [to the nearest whole number) g Remarks
+me * Rounding to the nearest Tenth, the result’
+. 18.5876 =18.5 (to the nearest Tenth] should include at most 1 decimal digit _
+vies * Rounding to the nearest Hundredth, the
+°18.5376~18.54 {to the nearest Hundredth] result should include at most 2 decimal
+eens digits and so on. |
+*18.5376)~ 18.538 [to the nearest Thousandth) rrr
+Notes for parents :
++ Remind your child to round up if the digit to the right of the place value he/she wants to round is equal
+to or greater than 5

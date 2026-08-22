@@ -1,0 +1,28 @@
+# Souly backend
+#
+# Minimum versions, not exact pins.
+#
+# Exact pins were the original approach and they broke on Python 3.13+: the
+# pinned pydantic predates those releases, so there is no prebuilt wheel and
+# pip falls back to compiling pydantic-core from Rust source — which needs a
+# full C++/Rust toolchain nobody should have to install to run a study app.
+#
+# With floors, pip picks whatever recent version has a wheel for your Python.
+# Verified against fastapi 0.115-0.141 and pydantic 2.10-2.13.
+
+fastapi>=0.115
+uvicorn[standard]>=0.34
+pydantic>=2.10
+pydantic-settings>=2.7
+python-dotenv>=1.0
+
+# Used by the CV simulator, the polling client, the vendor clients, and tests
+httpx>=0.27
+
+# Tests
+pytest>=8.0
+
+# Phase 2 additions, if you later swap the retrieval layer for embeddings:
+#   chromadb, sentence-transformers
+# The current RAG implementation is dependency-free on purpose — see
+# docs/CURRICULUM.md.

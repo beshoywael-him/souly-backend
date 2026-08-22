@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#7C3AED">
+<title>Souly</title>
+
+<!-- base.css is the original design, extracted verbatim and never edited.
+     app.css holds the landscape layout, the states the mockup didn't need
+     (loading, empty, error) and the accessibility settings. -->
+<link rel="stylesheet" href="/static/student/base.css">
+<link rel="stylesheet" href="/static/student/app.css">
+</head>
+<body class="font-medium theme-light">
+
+<!-- Landscape shell.
+     The container class is NOT .righty-app — base.css caps that at 420px,
+     which is the portrait phone frame we're moving away from. -->
+<div class="souly-app" id="soulyApp">
+
+  <svg width="0" height="0" style="position:absolute;" aria-hidden="true">
+    <defs>
+      <linearGradient id="gradPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#7C3AED"/>
+        <stop offset="100%" style="stop-color:#A855F7"/>
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <!-- Session plan. Always visible, on every screen.
+       A visual schedule is one of the 28 NCAEP evidence-based practices for
+       autism. Its job is to answer "what, how much, when am I finished, what
+       next" without the child having to ask anyone. -->
+  <div class="plan-strip" id="planStrip" aria-label="Today's plan"></div>
+
+  <!-- Every page is rendered by pages.js from live API data. Empty on purpose:
+       no number on screen can be out of step with the database if no number
+       is written in the markup. -->
+  <main class="stage" id="stage">
+    <div class="page active" id="page-home"></div>
+    <div class="page" id="page-learn"></div>
+    <div class="page" id="page-lesson"></div>
+    <div class="page" id="page-practice"></div>
+    <div class="page" id="page-progress"></div>
+    <div class="page" id="page-profile"></div>
+    <div class="page" id="page-games"></div>
+    <div class="page" id="page-rewards"></div>
+    <div class="page" id="page-achievements"></div>
+  </main>
+
+  <!-- Three destinations. Souly is not one of them — it lives inside the
+       lesson — and neither is the profile, which is the face in the corner. -->
+  <nav class="rail" id="rail" aria-label="Main navigation">
+    <button class="rail-item active" data-page="home" onclick="App.go('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="rail-item" data-page="learn" onclick="App.go('learn')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+      <span>Learn</span>
+    </button>
+    <button class="rail-item" data-page="progress" onclick="App.go('progress')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+      <span>Progress</span>
+    </button>
+  </nav>
+
+  <!-- Profile lives behind the child's own face in the corner, not as a tab.
+       It is somewhere you go occasionally; the three tabs are places you go
+       constantly, and mixing the two made the rail read as four equal
+       choices when it is really three plus a door. -->
+  <button class="avatar-btn" id="avatarBtn" onclick="App.go('profile')"
+          aria-label="Your profile" title="Your profile" hidden>
+    <span class="avatar-face" id="avatarFace">🙂</span>
+  </button>
+
+</div>
+
+<!-- Celebration. Fires at reward moments only, never while something is being
+     explained: decorative motion during instruction is the seductive-details
+     effect, and it costs comprehension. -->
+<div class="stars-overlay" id="starsOverlay" role="dialog" aria-modal="true" aria-labelledby="starsTitle">
+  <div class="stars-modal">
+    <div class="stars-display" id="starsIcon">⭐</div>
+    <h2 class="stars-title" id="starsTitle">Well done</h2>
+    <p class="stars-sub" id="starsSub"></p>
+    <button class="btn-primary" style="width:100%; justify-content:center;" onclick="App.closeOverlay()">Continue</button>
+  </div>
+</div>
+
+<div class="confetti-container" id="confetti" aria-hidden="true"></div>
+<div class="toast-stack" id="toastStack" role="status" aria-live="polite"></div>
+<div class="sr-only" id="srAnnounce" role="status" aria-live="polite"></div>
+
+<!-- Sign-in and the entry activity. Sits above everything until the child is
+     through it. -->
+<div class="gate active" id="gate"></div>
+
+<!-- Shown when the tablet is held upright. The app is built for landscape;
+     saying so beats silently reflowing into something cramped. -->
+<div class="rotate-hint" id="rotateHint" aria-hidden="true">
+  <div class="rotate-icon">🔄</div>
+  <div class="rotate-text">Turn your screen sideways</div>
+</div>
+
+<script src="/static/student/api.js"></script>
+<script src="/static/student/gate.js"></script>
+<script src="/static/student/pages.js"></script>
+<script src="/static/student/games.js"></script>
+<script src="/static/student/app.js"></script>
+</body>
+</html>

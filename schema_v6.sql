@@ -1,0 +1,37 @@
+-- =============================================================================
+-- schema_v6 — renditions carry what shaped them
+--
+-- Two columns on `page_renditions`. Both exist because of the same complaint:
+-- two children on the same page were getting the same lesson.
+--
+--   profile_sig   what the child's profile looked like when this was written
+--   visual_json   the picture that goes with it
+--
+-- WHY profile_sig
+-- ---------------
+-- The rendition cache is keyed (student_id, page_id, mode), which is correct:
+-- a child who comes back to a page should find the same lesson, not a fresh
+-- one. But it also meant the FIRST lesson a child ever saw was frozen — do the
+-- entry activity afterwards, or have a teacher set the support profile, and
+-- the cache kept serving the un-personalised version forever.
+--
+-- Storing a signature of the profile that produced it makes the cache
+-- self-invalidating: change what we know about the child and the next visit
+-- regenerates. Same mechanism as `source_sha` for a swapped PDF.
+--
+-- WHY visual_json
+-- ---------------
+-- The lesson screen used to show the scanned book page. A whole textbook page
+-- shrunk into half a pane is unreadable, and it is the source rather than the
+-- teaching. What belongs there is a picture with a job: the hundredths grid
+-- that shows WHY a hundredth is a hundredth, the labelled plant. It is
+-- generated with the explanation, from the same page, for the same child, so
+-- it is cached in the same row.
+--
+-- Re-runnable, like every schema file here. app/db.py hoists ADD COLUMN to
+-- the top of the file and swallows "duplicate column name", so applying this
+-- twice is a no-op.
+-- =============================================================================
+
+ALTER TABLE page_renditions ADD COLUMN profile_sig TEXT;
+ALTER TABLE page_renditions ADD COLUMN visual_json TEXT;
