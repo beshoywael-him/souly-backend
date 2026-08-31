@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1B1733">
+<title>Souly — Classroom</title>
+
+<!-- Nothing is loaded from the internet: no font host, no CDN, no framework.
+     This screen has to work on a classroom router with the upstream
+     unplugged, which is exactly the situation it will be in. -->
+<link rel="stylesheet" href="/static/teacher/base.css">
+</head>
+<body>
+
+<!-- =========================================================================
+     Sign-in. The widest door in the system: this screen shows every child in
+     the class at once, so it is the one that gets a real password.
+     ========================================================================= -->
+<div id="gate" class="gate active">
+  <form class="gate-card" id="gate-form" autocomplete="on">
+    <div class="gate-mark" aria-hidden="true">
+      <svg viewBox="0 0 48 48" width="48" height="48">
+        <rect x="8" y="12" width="32" height="26" rx="7" fill="#7C3AED"/>
+        <circle cx="18" cy="24" r="4" fill="#fff"/>
+        <circle cx="30" cy="24" r="4" fill="#fff"/>
+        <rect x="22" y="5" width="4" height="8" rx="2" fill="#7C3AED"/>
+      </svg>
+    </div>
+    <h1>Classroom</h1>
+    <p class="gate-sub">Sign in to see today's attention flags.</p>
+
+    <div id="gate-error" class="gate-error" hidden></div>
+
+    <label class="field">
+      <span>Email</span>
+      <input id="gate-email" type="email" autocomplete="username"
+             placeholder="you@school.local" required>
+    </label>
+    <label class="field">
+      <span>Password</span>
+      <input id="gate-password" type="password" autocomplete="current-password"
+             required>
+    </label>
+
+    <button class="btn-primary" id="gate-submit" type="submit">Open the classroom</button>
+
+    <p class="gate-note">
+      This screen names individual children next to the difficulty they are
+      having. It is for the teacher's own device — never the board.
+    </p>
+  </form>
+</div>
+
+<!-- =========================================================================
+     The dashboard.
+     ========================================================================= -->
+<div id="app" class="app" hidden>
+
+  <header class="top">
+    <div class="brand">
+      <span class="brand-dot" aria-hidden="true"></span>
+      <div>
+        <strong>Souly</strong>
+        <span class="brand-sub">Classroom</span>
+      </div>
+    </div>
+
+    <div class="live" id="live" title="How fresh this screen is">
+      <span class="pulse" aria-hidden="true"></span>
+      <span id="live-text">connecting…</span>
+    </div>
+
+    <div class="who">
+      <span id="who-name"></span>
+      <span class="avatar" id="who-initials"></span>
+      <button class="btn-ghost" id="sign-out" title="Sign out">Sign out</button>
+    </div>
+  </header>
+
+  <div class="counts" id="counts"></div>
+
+  <main class="stage">
+
+    <!-- The queue. The reason this screen exists. -->
+    <section class="panel panel-queue">
+      <div class="panel-head">
+        <h2>Needs you</h2>
+        <span class="panel-note" id="queue-count"></span>
+      </div>
+      <div id="queue" class="queue" aria-live="polite"></div>
+    </section>
+
+    <div class="side">
+      <!-- The class, at a glance. -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>The class</h2>
+          <span class="panel-note" id="roster-note"></span>
+        </div>
+        <div id="roster" class="roster"></div>
+      </section>
+
+      <!-- What has already been dealt with, so the queue emptying does not
+           look like the system stopping. -->
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Already handled</h2>
+        </div>
+        <div id="handled" class="handled"></div>
+      </section>
+    </div>
+
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+</div>
+
+<script src="/static/teacher/api.js"></script>
+<script src="/static/teacher/app.js"></script>
+</body>
+</html>

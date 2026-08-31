@@ -6,6 +6,8 @@ Souly backend — application entry point.
 Three things live here:
   /                 -> redirects to the student app
   /student          -> the student UI (the thing you actually look at)
+  /parent           -> the parents' hub
+  /teacher          -> the teacher's live flag queue
   /docs             -> live API contract for the Interfaces squad
 """
 
@@ -28,7 +30,10 @@ from app.routers import (
     parent,
     parent_auth,
     progress,
+    roster,
     student,
+    teacher,
+    teacher_auth,
     tutor_api,
 )
 
@@ -66,6 +71,7 @@ app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(onboarding.router)
 app.include_router(flags.router)
+app.include_router(roster.router)
 app.include_router(student.router)
 app.include_router(learning.router)
 app.include_router(gamification.router)
@@ -77,6 +83,11 @@ app.include_router(progress.router)
 # the database with the student app and nothing else.
 app.include_router(parent_auth.router)
 app.include_router(parent.router)
+
+# The teacher's dashboard. Third token realm, third header, third table — see
+# the threat model at the top of routers/teacher_auth.py.
+app.include_router(teacher_auth.router)
+app.include_router(teacher.router)
 
 # --- Static UI ---------------------------------------------------------------
 if settings.static_dir.exists():
@@ -101,6 +112,21 @@ def parent_app():
     return FileResponse(index)
 
 
+@app.get("/teacher", include_in_schema=False)
+def teacher_app():
+    """
+    The teacher's dashboard. Same server, same database, its own login.
+
+    This is the classroom screen, not the smart screen at the front of the
+    room: it names individual children next to the difficulty they are having,
+    which is exactly what must never appear on a display the class can see.
+    """
+    index = settings.static_dir / "teacher" / "index.html"
+    if not index.exists():
+        return RedirectResponse("/docs")
+    return FileResponse(index)
+
+
 @app.get("/", include_in_schema=False)
 def root():
     return RedirectResponse("/student")
@@ -114,5 +140,6 @@ def api_root() -> dict[str, str]:
         "phase": "2 — student app fully wired",
         "student_app": "/student",
         "parent_hub": "/parent",
+        "teacher_dashboard": "/teacher",
         "docs": "/docs",
     }

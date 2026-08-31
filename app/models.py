@@ -29,11 +29,27 @@ class FlagStatus(str, Enum):
 
 
 class FlagType(str, Enum):
-    GAZE_AWAY = "gaze_away"
-    HEAD_TURN = "head_turn"
-    ABSENT = "absent"
-    PROLONGED_INACTIVITY = "prolonged_inactivity"
-    DISTRESS = "distress"
+    """
+    What a flag says happened. Every value is a behaviour that can be
+    observed, timed, and shown to a teacher.
+
+    There is deliberately no value for an emotional state. The classroom
+    camera can honestly measure where a child is looking and for how long; it
+    cannot measure how a child feels, and a system that tells a teacher a
+    child is "distressed" is making a claim about a nine-year-old's inner life
+    it has no way to support. ('distress' was permitted here until schema_v8
+    and was never emitted by anything; it is gone before the CV rig could
+    start using it.) If a child needs help they ask for it — that is
+    `help_requested`, and it comes from the child, not from a model.
+    """
+
+    # From the classroom camera.
+    GAZE_AWAY = "gaze_away"                        # eyes off the board
+    HEAD_TURN = "head_turn"                        # whole head turned away
+    ABSENT = "absent"                              # the seat is empty
+    PROLONGED_INACTIVITY = "prolonged_inactivity"  # present, but nothing changes
+
+    # From the home robot, or from the child.
     REPEATED_ERROR = "repeated_error"
     HELP_REQUESTED = "help_requested"
 
@@ -105,6 +121,22 @@ class FlagCreate(BaseModel):
         None, description="Set only if the student had a tutoring session open."
     )
 
+    # What the child was drifting away FROM. Without it the home robot learns
+    # that a child struggled but not with what, and the loop stops one step
+    # short of closing. The CV rig reads it from the lesson the teacher has
+    # open and sends the topic's code; an unknown code is stored as null
+    # rather than rejected, because losing a real detection over a typo in a
+    # config file is the worse failure.
+    topic_code: str | None = Field(
+        None, max_length=64,
+        description="Code of the lesson on the board, e.g. 'MATH-5-DECIMALS-L1'.",
+        examples=["MATH-5-DECIMALS-L1"],
+    )
+    topic_id: int | None = Field(
+        None, description="Topic primary key, if the caller already knows it. "
+                          "Takes precedence over topic_code.",
+    )
+
     metadata: dict[str, Any] | None = Field(
         None,
         description="Free-form CV context: camera id, bbox, frame number.",
@@ -141,6 +173,9 @@ class FlagOut(BaseModel):
     flag_type: str
     confidence: float | None = None
     duration_ms: int | None = None
+
+    topic_id: int | None = None
+    topic_title: str | None = None
 
     status: str
 

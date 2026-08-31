@@ -1,0 +1,62 @@
+# Souly classroom camera — conda environment
+#
+#     conda env create -f cv/environment.yml
+#     conda activate souly-cv
+#
+# -----------------------------------------------------------------------------
+# WHY PYTHON 3.11 AND NOT 3.12
+# -----------------------------------------------------------------------------
+# mediapipe 0.10.9 publishes wheels for cp38 through cp311 and no further.
+# On 3.12 there is nothing to install and pip falls back to trying to build
+# it, which does not work. This is a hard floor set by the hardest dependency,
+# not a preference.
+#
+# The backend runs on its own interpreter and is unaffected — the two talk
+# over HTTP, not by sharing an environment.
+#
+# -----------------------------------------------------------------------------
+# WHY ONLY ONE OPENCV PACKAGE
+# -----------------------------------------------------------------------------
+# opencv-python and opencv-contrib-python both install into the same `cv2`
+# folder and overwrite each other. mediapipe depends on the contrib build, so
+# listing opencv-python as well means pip installs both and whichever lands
+# last wins — which is install-order dependent, so two teammates running this
+# file can end up with different cv2 builds. Contrib is a superset. One entry,
+# pinned, and the problem does not exist.
+#
+# -----------------------------------------------------------------------------
+# WHAT WAS REMOVED AND WHY
+# -----------------------------------------------------------------------------
+# scikit-learn, scipy, matplotlib, sounddevice, jupyter and ipykernel were in
+# the original file and nothing in cv/ imports any of them. They are a slower
+# install and more to go wrong at a venue for no gain. Add them back the day
+# something actually needs them.
+#
+# numpy 2.x is fine here: mediapipe 0.10.9 was tested against it and both the
+# face detector and the face mesh run clean.
+
+name: souly-cv
+
+channels:
+  - conda-forge
+  - defaults
+
+dependencies:
+  - python=3.11          # hard ceiling: mediapipe 0.10.9 has no cp312 wheel
+  - pip
+
+  - pip:
+      # --- the pipeline ---------------------------------------------------
+      - mediapipe==0.10.9
+      - opencv-contrib-python==4.10.0.84   # superset of opencv-python
+      - numpy==2.4.2
+      - protobuf==3.20.3                   # mediapipe 0.10.9 needs <4
+
+      # --- pulled in by mediapipe; pinned so a venue install is repeatable
+      - absl-py==2.4.0
+      - attrs==25.4.0
+      - flatbuffers==25.12.19
+
+      # Publishing uses urllib from the standard library on purpose: one less
+      # thing to install on a classroom machine, and the retry logic we need
+      # is ours either way. See cv/publisher.py.

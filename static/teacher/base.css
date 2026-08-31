@@ -1,0 +1,252 @@
+/* =============================================================================
+   Souly — the teacher's classroom screen.
+
+   Written for one situation: a teacher glancing at a laptop between sentences
+   while still teaching. That drives every choice below.
+
+     · The queue is the biggest thing on the screen and the only thing that
+       moves. Everything else is reference.
+     · Two buttons per card, far apart, large enough to hit without aiming.
+     · Colour never carries meaning alone — every state is also a word,
+       because a colour-blind teacher must read this as fast as anyone else.
+     · No animation except one slow pulse on the live indicator. A screen that
+       flickers in the corner of your eye while you teach is a screen you turn
+       off.
+   ============================================================================= */
+
+:root{
+  --ink:#14121C;
+  --body:#3A3552;
+  --muted:#7A7392;
+  --line:#E6E2F0;
+  --paper:#FFFFFF;
+  --ground:#F6F4FB;
+
+  --purple:#7C3AED;
+  --purple-deep:#5B27C4;
+  --purple-soft:#F1EAFE;
+
+  --navy:#1B1733;
+
+  /* Semantic, and separate from the brand accent on purpose. */
+  --flag:#C2321F;         --flag-soft:#FDECE8;
+  --drift:#96590B;        --drift-soft:#FCF0DC;
+  --calm:#0C6B52;         --calm-soft:#E3F2ED;
+
+  --radius:12px;
+  --shadow:0 1px 2px rgba(20,18,28,.05), 0 10px 26px -18px rgba(20,18,28,.3);
+}
+
+*{ box-sizing:border-box }
+html,body{ height:100% }
+body{
+  margin:0; background:var(--ground); color:var(--body);
+  font:15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3{ color:var(--ink); margin:0 }
+button{ font:inherit; cursor:pointer }
+
+/* ---------------------------------------------------------------- sign in */
+.gate{
+  position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+  background:linear-gradient(160deg,#221C42 0%, #14112A 100%); z-index:50; padding:24px;
+}
+.gate.active{ display:flex }
+.gate-card{
+  width:100%; max-width:400px; background:var(--paper); border-radius:18px;
+  padding:34px 30px 26px; box-shadow:0 30px 70px -30px rgba(0,0,0,.6);
+  text-align:center;
+}
+.gate-mark{ margin-bottom:10px }
+.gate-card h1{ font-size:25px; letter-spacing:-.02em }
+.gate-sub{ color:var(--muted); margin:6px 0 22px; font-size:14px }
+.field{ display:block; text-align:left; margin-bottom:14px }
+.field span{
+  display:block; font-size:11px; letter-spacing:.09em; text-transform:uppercase;
+  color:var(--muted); margin-bottom:5px; font-weight:600;
+}
+.field input{
+  width:100%; padding:12px 14px; font-size:15px; color:var(--ink);
+  border:1.5px solid var(--line); border-radius:10px; background:#FCFBFE;
+}
+.field input:focus{ outline:none; border-color:var(--purple);
+  box-shadow:0 0 0 3px var(--purple-soft) }
+.btn-primary{
+  width:100%; padding:13px; border:none; border-radius:10px; color:#fff;
+  background:var(--purple); font-weight:650; font-size:15px;
+}
+.btn-primary:hover{ background:var(--purple-deep) }
+.btn-primary:disabled{ opacity:.6; cursor:default }
+.gate-error{
+  background:var(--flag-soft); color:var(--flag); border-radius:8px;
+  padding:9px 12px; font-size:13.5px; margin-bottom:14px; text-align:left;
+}
+.gate-note{
+  margin:18px 0 0; font-size:12px; line-height:1.45; color:var(--muted);
+  border-top:1px solid var(--line); padding-top:14px; text-align:left;
+}
+
+/* ------------------------------------------------------------------- shell */
+.app{ min-height:100%; display:flex; flex-direction:column }
+
+.top{
+  display:flex; align-items:center; gap:20px; padding:12px 22px;
+  background:var(--navy); color:#EDEAF6;
+}
+.brand{ display:flex; align-items:center; gap:10px }
+.brand-dot{
+  width:26px; height:26px; border-radius:8px; flex:none;
+  background:linear-gradient(140deg,#8B5CF6,#6D28D9);
+}
+.brand strong{ color:#fff; font-size:15px; display:block; line-height:1.15 }
+.brand-sub{ font-size:11.5px; color:#9C93BE; letter-spacing:.06em;
+  text-transform:uppercase }
+
+.live{
+  display:flex; align-items:center; gap:8px; margin-left:auto;
+  font-size:12.5px; color:#B7AFD4; font-variant-numeric:tabular-nums;
+}
+.pulse{
+  width:8px; height:8px; border-radius:50%; background:#4ADE80; flex:none;
+  animation:pulse 2.4s ease-in-out infinite;
+}
+.live.stale .pulse{ background:#F59E0B; animation:none }
+.live.down .pulse{ background:#EF4444; animation:none }
+@keyframes pulse{ 0%,100%{opacity:1} 50%{opacity:.35} }
+@media (prefers-reduced-motion:reduce){ .pulse{ animation:none } }
+
+.who{ display:flex; align-items:center; gap:10px; font-size:13.5px; color:#CFC8E4 }
+.avatar{
+  width:30px; height:30px; border-radius:50%; background:var(--purple);
+  color:#fff; display:grid; place-items:center; font-size:12px; font-weight:700;
+}
+.btn-ghost{
+  background:transparent; border:1px solid #3B3459; color:#B7AFD4;
+  padding:6px 11px; border-radius:8px; font-size:12.5px;
+}
+.btn-ghost:hover{ background:#2A2447; color:#fff }
+
+/* ------------------------------------------------------------------ counts */
+.counts{
+  display:flex; gap:1px; background:var(--line);
+  border-bottom:1px solid var(--line);
+}
+.count{ flex:1; background:var(--paper); padding:10px 16px }
+.count b{
+  display:block; font-size:20px; color:var(--ink); line-height:1.1;
+  font-variant-numeric:tabular-nums;
+}
+.count span{ font-size:11.5px; color:var(--muted) }
+
+/* ------------------------------------------------------------------- stage */
+.stage{
+  flex:1; display:grid; grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);
+  gap:16px; padding:16px 22px 24px; align-items:start;
+}
+.side{ display:flex; flex-direction:column; gap:16px }
+
+.panel{
+  background:var(--paper); border:1px solid var(--line);
+  border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden;
+}
+.panel-head{
+  display:flex; align-items:baseline; gap:10px;
+  padding:13px 16px 11px; border-bottom:1px solid var(--line);
+}
+.panel-head h2{ font-size:15px; letter-spacing:-.01em }
+.panel-note{ margin-left:auto; font-size:12px; color:var(--muted);
+  font-variant-numeric:tabular-nums }
+
+/* ------------------------------------------------------------------- queue */
+.queue{ padding:12px; display:flex; flex-direction:column; gap:10px; min-height:120px }
+
+.flagcard{
+  border:1px solid var(--line); border-radius:11px; padding:13px 14px;
+  display:grid; grid-template-columns:auto 1fr auto; gap:13px; align-items:center;
+  background:#FFFDFD;
+}
+.flagcard.fresh{ border-color:#F0C6BC; background:var(--flag-soft) }
+
+.face{
+  width:44px; height:44px; border-radius:12px; display:grid; place-items:center;
+  font-size:22px; flex:none; background:var(--purple-soft);
+}
+.flagbody h3{ font-size:15.5px; margin-bottom:2px }
+.flagwhat{ font-size:13.5px; color:var(--body) }
+.flagmeta{
+  font-size:11.5px; color:var(--muted); margin-top:4px;
+  display:flex; gap:10px; flex-wrap:wrap; font-variant-numeric:tabular-nums;
+}
+.chip{
+  display:inline-block; padding:2px 7px; border-radius:5px; font-size:10.5px;
+  font-weight:650; letter-spacing:.05em; text-transform:uppercase;
+}
+.chip-flag{ background:var(--flag-soft); color:var(--flag) }
+.chip-support{ background:var(--purple-soft); color:var(--purple-deep) }
+
+.actions{ display:flex; gap:8px; flex:none }
+.btn-approve,.btn-dismiss{
+  border:none; border-radius:9px; padding:11px 15px; font-weight:650; font-size:13.5px;
+}
+.btn-approve{ background:var(--calm); color:#fff }
+.btn-approve:hover{ background:#095844 }
+.btn-dismiss{ background:#EFECF6; color:var(--body) }
+.btn-dismiss:hover{ background:#E2DDF0 }
+.btn-approve:disabled,.btn-dismiss:disabled{ opacity:.5; cursor:default }
+
+.empty{
+  padding:34px 18px; text-align:center; color:var(--muted); font-size:13.5px;
+  line-height:1.55;
+}
+.empty strong{ display:block; color:var(--ink); font-size:15px; margin-bottom:4px }
+
+/* ------------------------------------------------------------------ roster */
+.roster{ padding:10px; display:grid; grid-template-columns:repeat(auto-fill,minmax(132px,1fr)); gap:8px }
+.child{
+  border:1px solid var(--line); border-radius:10px; padding:9px 10px;
+  display:flex; align-items:center; gap:9px;
+}
+.child .face{ width:32px; height:32px; border-radius:9px; font-size:16px }
+.child-name{ font-size:13px; color:var(--ink); font-weight:600;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+.child-state{ font-size:11px; margin-top:1px }
+.child.flagged{ border-color:#F0C6BC; background:var(--flag-soft) }
+.child.flagged .child-state{ color:var(--flag); font-weight:650 }
+.child.drifting{ border-color:#EBD3A8; background:var(--drift-soft) }
+.child.drifting .child-state{ color:var(--drift) }
+.child.settled .child-state,.child.attending .child-state{ color:var(--muted) }
+
+/* ----------------------------------------------------------------- handled */
+.handled{ padding:8px 6px 12px }
+.handled-row{
+  display:flex; align-items:baseline; gap:9px; padding:6px 10px;
+  font-size:12.5px; border-bottom:1px solid #F2EFF8;
+}
+.handled-row:last-child{ border-bottom:none }
+.handled-row .st{ font-size:10.5px; font-weight:650; letter-spacing:.05em;
+  text-transform:uppercase; flex:none }
+.st-approved{ color:var(--calm) }
+.st-dismissed{ color:var(--muted) }
+.st-in_progress,.st-done{ color:var(--purple-deep) }
+.handled-row .ago{ margin-left:auto; color:var(--muted); font-size:11.5px;
+  flex:none; font-variant-numeric:tabular-nums }
+
+/* ------------------------------------------------------------------- toast */
+.toast{
+  position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+  background:var(--navy); color:#fff; padding:11px 18px; border-radius:10px;
+  font-size:13.5px; box-shadow:0 14px 34px -14px rgba(0,0,0,.55); z-index:40;
+}
+
+/* ------------------------------------------------------------------ narrow */
+@media (max-width:900px){
+  .stage{ grid-template-columns:1fr }
+  .counts{ flex-wrap:wrap }
+  .count{ min-width:44% }
+  .flagcard{ grid-template-columns:auto 1fr; }
+  .actions{ grid-column:1 / -1 }
+  .btn-approve,.btn-dismiss{ flex:1 }
+}
+
+:focus-visible{ outline:3px solid var(--purple); outline-offset:2px; border-radius:6px }

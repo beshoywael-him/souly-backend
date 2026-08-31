@@ -71,11 +71,34 @@ _FLAG_SELECT = """
         f.detected_at, f.created_at,
         f.reviewed_by_teacher_id, f.reviewed_at,
         f.picked_up_at, f.resolved_at, f.resolution_note, f.metadata,
+        f.topic_id, t.title AS topic_title,
         s.external_id   AS student_external_id,
         s.display_name  AS student_name
     FROM flags f
     JOIN students s ON s.id = f.student_id
+    LEFT JOIN topics t ON t.id = f.topic_id
 """
+
+
+def _resolve_topic(conn: sqlite3.Connection, payload: FlagCreate) -> int | None:
+    """
+    Work out which lesson the child was drifting away from.
+
+    An explicit id wins. A code that matches nothing returns None rather than
+    raising: a typo in the CV rig's config file should cost us the topic on
+    one flag, not the flag itself.
+    """
+    if payload.topic_id is not None:
+        row = conn.execute("SELECT id FROM topics WHERE id = ?",
+                           (payload.topic_id,)).fetchone()
+        return row["id"] if row else None
+
+    if payload.topic_code:
+        row = conn.execute("SELECT id FROM topics WHERE code = ?",
+                           (payload.topic_code,)).fetchone()
+        return row["id"] if row else None
+
+    return None
 
 
 def _fetch_flag(conn: sqlite3.Connection, flag_id: int) -> FlagOut:
@@ -158,13 +181,15 @@ def create_flag(
         FlagStatus.DISMISSED.value if auto_dismissed else FlagStatus.PENDING.value
     )
 
+    topic_id = _resolve_topic(conn, payload)
+
     cursor = conn.execute(
         """
         INSERT INTO flags (
             student_id, session_id, source, flag_type,
-            confidence, duration_ms, status,
+            confidence, duration_ms, status, topic_id,
             detected_at, created_at, resolution_note, metadata
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             student["id"],
@@ -174,6 +199,7 @@ def create_flag(
             payload.confidence,
             payload.duration_ms,
             initial_status,
+            topic_id,
             detected_at,
             created_at,
             (

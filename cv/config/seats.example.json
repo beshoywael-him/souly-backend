@@ -1,0 +1,37 @@
+{
+  "_readme": [
+    "Which child sits where, as seen by this camera.",
+    "Copy this to seats.json and then redraw it properly:",
+    "    python cv/calibrate.py --camera 0",
+    "",
+    "Boxes are [x1, y1, x2, y2] normalised 0-1, so the plan survives a",
+    "change of camera resolution. They are drawn generously: the box only",
+    "has to contain the child's face, not fit it exactly.",
+    "",
+    "topic_code is the lesson on the board. It is attached to every flag so",
+    "the home robot knows what to re-teach that evening; without it a flag",
+    "says a child struggled but not with what."
+  ],
+  "camera_id": "cam-1",
+  "topic_code": "MATH-5-DECIMALS-L1",
+  "seats": [
+    {
+      "seat_id": "seat-01",
+      "student_external_id": "stu-01",
+      "display_name": "Member1",
+      "box": [0.04, 0.18, 0.28, 0.62]
+    },
+    {
+      "seat_id": "seat-02",
+      "student_external_id": "stu-02",
+      "display_name": "Member2",
+      "box": [0.30, 0.18, 0.54, 0.62]
+    },
+    {
+      "seat_id": "seat-03",
+      "student_external_id": "stu-05",
+      "display_name": "Member5",
+      "box": [0.56, 0.18, 0.80, 0.62]
+    }
+  ]
+}

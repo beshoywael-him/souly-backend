@@ -50,11 +50,17 @@ A working reference implementation is `scripts/fake_cv_publisher.py` — the
 
 ### `flag_type` values
 
-`gaze_away` · `head_turn` · `absent` · `prolonged_inactivity` · `distress` ·
+`gaze_away` · `head_turn` · `absent` · `prolonged_inactivity` ·
 `repeated_error` · `help_requested`
 
 The first four are the CV's. `repeated_error` and `help_requested` come from
-the robot; `distress` may come from either.
+the robot or from the child.
+
+There is deliberately no value for an emotional state. `distress` was
+permitted here until schema_v8 and was never emitted by anything; it is gone.
+A camera can honestly measure where a child is looking and for how long, and
+telling a teacher that a nine-year-old is distressed is a claim it has no way
+to support.
 
 ---
 
@@ -102,9 +108,12 @@ question you should expect to be asked about.
 Read it once at startup:
 
 ```python
-students = httpx.get(f"{API}/students").json()   # endpoint lands in Phase 3
-# For now: read it from the database, or hardcode from scripts/seed_students.py
+students = httpx.get(f"{API}/students").json()   # live — see app/routers/roster.py
 ```
+
+Read it once at startup and cache it. Nothing in it changes during a lesson,
+and re-reading it per frame would put an HTTP call inside the detection loop,
+which is the one place it must never be.
 
 ---
 
@@ -158,15 +167,34 @@ python scripts/fake_cv_publisher.py --watch --interval 3
 
 ---
 
-## What we still need from you
+## The four open questions, now answered
 
-1. **Which `flag_type` values can your code actually produce?** If it only
-   does `gaze_away`, say so — we'd rather trim the enum than carry types
-   nothing emits.
-2. **Does it produce a confidence score?** If not, we drop the noise-floor
-   filter and find another way to handle false positives.
-3. **Does it produce a drift duration**, or just a moment-in-time detection?
-4. **How does it identify students** — face recognition, seat position,
-   manual assignment at session start? This determines whether
-   `student_external_id` is something you know reliably or something we need
-   to solve together.
+This guide used to end with four questions for whoever owned the detection
+code. The implementation in `cv/` answers all of them — see `cv/README.md`.
+
+1. **Which `flag_type` values does it produce?** `gaze_away` when the eyes
+   wander, `head_turn` when the whole head turns, and `absent` when a seat
+   stays empty for 25 seconds. Head pose and gaze are scored separately so
+   the queue can say which happened rather than lumping both together.
+
+2. **Does it produce a confidence score?** Yes, and an honest one:
+   half of it is how much of the drift a face was actually readable for, a
+   third is how large that face was in the frame, and the rest is how far
+   below the threshold the score sat. Readings below `FLAG_MIN_CONFIDENCE`
+   filter themselves out.
+
+3. **Does it produce a drift duration?** Yes. A low score is not a flag; a
+   low score that persists past that child's `drift_threshold_ms` is, and
+   `duration_ms` is the measured length. Everything is timed in milliseconds
+   rather than counted in frames, so the behaviour does not change with the
+   machine's frame rate.
+
+4. **How does it identify students?** By seat. `cv/config/seats.json` maps a
+   named rectangle in the frame to a `student_external_id`, drawn once with
+   `cv/calibrate.py` and re-assignable mid-session by clicking a face.
+
+   Deliberately **not** face recognition: that would mean storing a biometric
+   template of every child on a laptop that travels to a competition, in a
+   project whose whole privacy claim is that nothing identifying leaves the
+   room. Seats cost us the case where two children swap places — a mistake a
+   teacher can see and fix. A wrong face match is not.
