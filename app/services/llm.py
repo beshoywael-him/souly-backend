@@ -456,39 +456,119 @@ def generate_json(
 # and a child who is already struggling reads that as their own mistake. Every
 # label this app shows is drawn in HTML on top of the picture, where it is
 # exactly right and a screen reader can read it.
+# WHY THIS PROMPT IS WRITTEN THE WAY IT IS
+# ----------------------------------------
+# The first version asked for "flat vector, modern app icon set", and it got
+# exactly that: decorative purple blobs, a mug with hearts on it, a paper towel
+# that read as a blue rounded rectangle. An adult could not tell what was in
+# the picture. That is a total failure here, because for a child with a
+# reading difficulty the picture is not the decoration around the lesson —
+# it IS the lesson, and the words are the support.
+#
+# So the style is now written as a recognition test rather than an aesthetic:
+# every clause below exists to make the thing in the picture nameable at a
+# glance. Friendly and warm is still wanted — it is a children's app — but it
+# is now subordinate to being legible, and where the two conflict, legible
+# wins.
+#
+# The bans are specific because generic bans do not work. "No clutter" did not
+# stop the decorative blobs; "no abstract decorative shapes behind or around
+# the subject" does.
 ILLUSTRATION_STYLE = (
-    "Flat vector illustration for a children's learning app. Rounded friendly "
-    "shapes, thick soft outlines, bright cheerful colours on a light "
-    "background, gentle purple and violet accents. Simple and uncluttered, "
-    "one clear subject, plenty of empty space, no background scenery clutter. "
-    "Playful and warm, in the style of a modern app icon set. "
+    # 1. What kind of picture. Children's non-fiction, not app-icon vector.
+    "Clear, warm, true-to-life illustration in the style of a modern "
+    "children's science encyclopaedia. Soft natural shading and clean gentle "
+    "outlines. Friendly and inviting, but the objects are drawn accurately, "
+    "with correct real-world shapes, proportions and colours, so that each "
+    "one is instantly recognisable for what it is. "
+    # 2. Composition. One readable subject, well separated from the ground.
+    "Straight-on eye-level view of the subject, centred, filling most of the "
+    "frame, evenly lit, in sharp focus, with strong contrast against a plain "
+    "soft off-white background. When two things are being compared, place "
+    "them side by side, equally sized, clearly separated, both fully visible. "
+    # 3. The bans. Each one is a real failure that shipped.
+    "NO abstract or decorative shapes anywhere — no blobs, swooshes, waves, "
+    "hearts, stars, sparkles, confetti, ribbons or patterned bands, behind or "
+    "around or on top of the objects. Nothing purely ornamental in the frame. "
+    "Do not stylise the objects into simplified geometric symbols. Do not "
+    "tint objects an unnatural colour: soil is brown, leaves are green, water "
+    "is clear. No busy background, no scenery, no borders, no framing devices, "
+    "no collage, no split panels, no drop shadows cast onto decorative shapes. "
+    # 4. The two hard constraints that predate this rewrite.
+    "No people, no hands, no faces. "
     "ABSOLUTELY NO text, no letters, no numbers, no labels, no writing of any "
-    "kind anywhere in the image."
+    "kind anywhere in the image. "
+    # 5. The test the picture has to pass. Stated as a test because the model
+    #    composes better against a goal than against a list of prohibitions.
+    "The picture must pass this test: a ten-year-old child who cannot read "
+    "well, seeing it for the first time with no caption, can immediately name "
+    "every object in it and say what is happening. If any object would need a "
+    "label to be understood, draw it more plainly instead."
 )
 
-# A separate model from the tutor: the text model cannot draw, and the image
-# model should not teach.
+# The image model is configured, not hardcoded — see IMAGE_GENERATOR_* in
+# .env — because it is a separate product with separate billing from the
+# tutor, and which one an account can afford changes.
 #
-# Several, tried in order, because quota is per model: an account with none
-# left on Nano Banana 2 may still have some on the Lite version or on the 2.5
-# generation. The first one that answers is remembered for the process.
-IMAGE_MODELS = (
+# TWO DIFFERENT APIS LIVE BEHIND ONE SETTING
+# ------------------------------------------
+# They are not interchangeable and swapping the model name alone does not
+# work:
+#
+#   imagen-*        POST :predict
+#                   {"instances":[{"prompt":...}],"parameters":{...}}
+#                   -> predictions[].bytesBase64Encoded
+#                   Takes aspectRatio as a real parameter.
+#
+#   gemini-*-image  POST :generateContent
+#                   {"contents":[...],"generationConfig":{responseModalities}}
+#                   -> candidates[].content.parts[].inlineData.data
+#                   No aspect ratio parameter; it goes in the prompt.
+#
+# Both are dispatched from the model name below.
+
+# Tried in order after whatever is configured, because quota is per model: an
+# account out of allowance on one may still have some on another.
+FALLBACK_IMAGE_MODELS = (
+    "imagen-3.0-generate-002",
     "gemini-3.1-flash-image",        # Nano Banana 2
-    "gemini-3.1-flash-lite-image",   # Nano Banana 2 Lite — cheaper quota
+    "gemini-3.1-flash-lite-image",   # Nano Banana 2 Lite
     "gemini-2.5-flash-image",        # Nano Banana
 )
-IMAGE_MODEL = IMAGE_MODELS[0]        # what check_image.py reports first
+
+VALID_ASPECT_RATIOS = ("1:1", "16:9", "9:16", "4:3", "3:4")
 
 # When every model answers 429 there is no point asking again on the next page
-# and making a child wait through three doomed calls per lesson. Quota comes
-# back on a clock, so back off and try again later rather than never.
+# and making a child wait through doomed calls. Quota comes back on a clock,
+# so back off and try again later rather than never.
 _QUOTA_BACKOFF_SECONDS = 900
 _quota_blocked_until = 0.0
 _working_model: str | None = None
 
 
+def image_models() -> list[str]:
+    """The configured model first, then the others, without duplicates."""
+    ordered = [settings.image_generator_model.strip()]
+    ordered += [m for m in FALLBACK_IMAGE_MODELS]
+    seen, out = set(), []
+    for model in ordered:
+        if model and model not in seen:
+            seen.add(model)
+            out.append(model)
+    return out
+
+
+# What check_image.py reports, and what the docstrings above refer to.
+IMAGE_MODEL = settings.image_generator_model
+
+
+def aspect_ratio() -> str:
+    ratio = settings.image_aspect_ratio.strip()
+    return ratio if ratio in VALID_ASPECT_RATIOS else "16:9"
+
+
 def image_configured() -> bool:
-    return bool(settings.gemini_api_key)
+    return settings.image_configured
 
 
 def image_quota_blocked() -> bool:
@@ -496,57 +576,109 @@ def image_quota_blocked() -> bool:
     return time.time() < _quota_blocked_until
 
 
-def generate_image(scene: str, *, timeout: float = 60.0) -> tuple[bytes | None, str, str | None]:
+def _is_imagen(model: str) -> bool:
+    return model.lower().startswith("imagen")
+
+
+def _image_payloads(model: str, prompt: str) -> list[dict]:
     """
-    One illustration of `scene`. Returns (png_bytes, mime, error).
+    The request bodies to try for this model, best first.
 
-    Never raises. A lesson whose picture failed is still a lesson, so every
-    caller is expected to carry on without one.
+    More than one because the Gemini image models disagree with each other
+    about whether `responseModalities` is required or rejected, and a 400 on
+    the first shape is retried with the next rather than treated as failure.
     """
-    if not image_configured():
-        return None, "", "no API key configured"
+    if _is_imagen(model):
+        return [{
+            "instances": [{"prompt": prompt}],
+            "parameters": {
+                "sampleCount": 1,
+                "aspectRatio": aspect_ratio(),
+                # No people, ever. Partly because Imagen refuses to generate
+                # children and half these scenes would be about one; mostly
+                # because an app used by children should not be generating
+                # pictures of children. The lessons are about plants, seeds,
+                # numbers and objects, and those are what get drawn.
+                "personGeneration": "dont_allow",
+            },
+        }]
 
-    scene = (scene or "").strip()
-    if not scene:
-        return None, "", "no scene given"
-
-    global _quota_blocked_until, _working_model
-
-    if image_quota_blocked():
-        return None, "", ("image quota exhausted — backing off, the drawn "
-                          "diagram is being used instead")
-
-    prompt = f"{scene}.\n\n{ILLUSTRATION_STYLE}"
     body = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
-
-    # Image models need to be told to return an image. Without this the call
-    # succeeds and comes back with a friendly paragraph ABOUT the picture,
-    # which is why Souly said "I will draw the bean seeds for you now" and
-    # then nothing appeared.
-    #
-    # Some model versions reject the field instead of needing it, so a 400 is
-    # retried without it rather than treated as failure.
-    attempts = [
+    return [
         {**body, "generationConfig": {"responseModalities": ["IMAGE"]}},
         {**body, "generationConfig": {"responseModalities": ["TEXT", "IMAGE"]}},
         body,
     ]
 
-    models = ([_working_model] if _working_model
-              else [m for m in IMAGE_MODELS])
 
-    response = None
+def _image_endpoint(model: str) -> str:
+    verb = "predict" if _is_imagen(model) else "generateContent"
+    return f"{GEMINI_BASE}/models/{model}:{verb}"
+
+
+def _extract_image(model: str, data: dict) -> tuple[bytes | None, str]:
+    """Pull the bytes out of whichever response shape came back."""
+    if _is_imagen(model):
+        for prediction in data.get("predictions", []):
+            encoded = (prediction.get("bytesBase64Encoded")
+                       or prediction.get("bytes_base64_encoded"))
+            if encoded:
+                try:
+                    return base64.b64decode(encoded), prediction.get(
+                        "mimeType") or prediction.get("mime_type") or "image/png"
+                except (ValueError, TypeError):
+                    return None, ""
+        return None, ""
+
+    for candidate in data.get("candidates", []):
+        for part in candidate.get("content", {}).get("parts", []):
+            inline = part.get("inlineData") or part.get("inline_data")
+            if inline and inline.get("data"):
+                try:
+                    return base64.b64decode(inline["data"]), (
+                        inline.get("mimeType") or inline.get("mime_type")
+                        or "image/png")
+                except (ValueError, TypeError):
+                    return None, ""
+    return None, ""
+
+
+def generate_image(scene: str, *, timeout: float = 90.0) -> tuple[bytes | None, str, str | None]:
+    """
+    One illustration of `scene`. Returns (image_bytes, mime, error).
+
+    Never raises. A lesson whose picture failed is still a lesson — the drawn
+    diagram is the one that is guaranteed — so every caller carries on without
+    one.
+    """
+    global _quota_blocked_until, _working_model
+
+    if settings.image_generator_provider.strip().lower() in ("", "none", "off"):
+        return None, "", "image generation is switched off (IMAGE_GENERATOR_PROVIDER)"
+    if not image_configured():
+        return None, "", "no image API key configured"
+    if image_quota_blocked():
+        return None, "", ("image quota exhausted — backing off, the drawn "
+                          "diagram is being used instead")
+
+    scene = (scene or "").strip()
+    if not scene:
+        return None, "", "no scene given"
+
+    prompt = f"{scene}.\n\n{ILLUSTRATION_STYLE}"
+    models = [_working_model] if _working_model else image_models()
+
     last = "no attempt made"
     out_of_quota = 0
 
     for model in models:
-        url = f"{GEMINI_BASE}/models/{model}:generateContent"
-        for payload in attempts:
+        url = _image_endpoint(model)
+        for payload in _image_payloads(model, prompt):
             try:
                 with httpx.Client(timeout=timeout) as client:
                     response = client.post(
                         url,
-                        params={"key": settings.gemini_api_key},
+                        params={"key": settings.image_key},
                         json=payload,
                         headers={"Content-Type": "application/json"},
                     )
@@ -554,48 +686,155 @@ def generate_image(scene: str, *, timeout: float = 60.0) -> tuple[bytes | None, 
                 return None, "", f"Network error: {exc}"
 
             if response.status_code == 200:
-                _working_model = model
+                try:
+                    data = response.json()
+                except ValueError as exc:
+                    last = f"{model}: malformed response: {exc}"
+                    break
+                image, mime = _extract_image(model, data)
+                if image:
+                    _working_model = model
+                    return image, mime, None
+                last = (f"{model}: replied without an image. "
+                        f"{json.dumps(data)[:200]}")
                 break
-            last = (f"{model}: HTTP {response.status_code}: "
-                    f"{response.text[:180]}")
+
+            last = f"{model}: HTTP {response.status_code}: {response.text[:180]}"
             if response.status_code == 429:
                 out_of_quota += 1
                 break            # no point trying other shapes on this model
             if response.status_code != 400:
-                break            # a real refusal; try the next model
+                break            # a real refusal; move to the next model
 
-        if response is not None and response.status_code == 200:
+    if out_of_quota:
+        _quota_blocked_until = time.time() + _QUOTA_BACKOFF_SECONDS
+        return None, "", (
+            "image quota exhausted on every image model. The lesson falls back "
+            "to the drawn diagram, which needs no quota. Check billing on the "
+            "Google AI Studio project for IMAGE_GENERATOR_API_KEY."
+        )
+    return None, "", last
+
+
+# =============================================================================
+# The second frame
+# =============================================================================
+#
+# The picture moves by cross-fading two stills. Generating the second one from
+# a text prompt does not work: two independent calls give two different pots,
+# two different backgrounds and two different angles, and fading between them
+# reads as a glitch rather than as a change. So the second frame is the FIRST
+# frame, edited — the model is handed the image it already made and asked to
+# change one thing about it.
+#
+# That means Imagen cannot do this half of the job. imagen-*:predict takes a
+# prompt and nothing else; only the gemini *-image models accept an image in
+# and give an image out. The still and the motion therefore use different
+# models by necessity, not by preference.
+EDIT_CAPABLE_MODELS = (
+    "gemini-3.1-flash-image",        # Nano Banana 2
+    "gemini-3.1-flash-lite-image",
+    "gemini-2.5-flash-image",        # Nano Banana
+)
+
+# Bolted onto whatever the lesson says should change. Everything here exists
+# to keep the second frame FADEABLE onto the first: same camera, same framing,
+# same everything except the one thing that moves. A second frame that is a
+# lovely picture but shot from somewhere else is useless.
+MOTION_STYLE = (
+    "Keep absolutely everything else in the picture identical: the same "
+    "camera angle, the same distance, the same framing and crop, the same "
+    "background, the same lighting, the same colours, the same art style, "
+    "and every object in exactly the same position and at the same size. "
+    "Change ONLY what is described above. Do not move the camera, do not "
+    "zoom, do not re-compose, do not add or remove any other object. "
+    "Still no text, no letters, no numbers, no labels, and no people."
+)
+
+
+def _edit_payload(prompt: str, image: bytes, mime: str) -> dict:
+    return {
+        "contents": [{
+            "role": "user",
+            "parts": [
+                {"inline_data": {"mime_type": mime or "image/png",
+                                 "data": base64.b64encode(image).decode()}},
+                {"text": prompt},
+            ],
+        }],
+        "generationConfig": {"responseModalities": ["IMAGE"]},
+    }
+
+
+def edit_image(image: bytes, mime: str, change: str, *,
+               timeout: float = 90.0) -> tuple[bytes | None, str, str | None]:
+    """
+    The same picture with one thing changed. Returns (bytes, mime, error).
+
+    Never raises, and a failure here is not a failure of the lesson: the
+    caller keeps the still it already has.
+    """
+    if not image or not (change or "").strip():
+        return None, "", "nothing to change"
+    if not image_configured():
+        return None, "", "no image API key configured"
+    if image_quota_blocked():
+        return None, "", "image quota exhausted — backing off"
+
+    prompt = f"{change.strip()}.\n\n{MOTION_STYLE}"
+    last = "no edit-capable model available"
+
+    for model in EDIT_CAPABLE_MODELS:
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                response = client.post(
+                    f"{GEMINI_BASE}/models/{model}:generateContent",
+                    params={"key": settings.image_key},
+                    json=_edit_payload(prompt, image, mime),
+                    headers={"Content-Type": "application/json"},
+                )
+        except httpx.HTTPError as exc:
+            return None, "", f"Network error: {exc}"
+
+        if response.status_code == 200:
+            try:
+                data = response.json()
+            except ValueError as exc:
+                last = f"{model}: malformed response: {exc}"
+                continue
+            out, out_mime = _extract_image(model, data)
+            if out:
+                return out, out_mime, None
+            last = f"{model}: replied without an image"
+            continue
+
+        last = f"{model}: HTTP {response.status_code}: {response.text[:180]}"
+        if response.status_code == 429:
+            # Editing shares the image quota. Do not spend the rest of it
+            # walking the list.
             break
 
-    if response is None or response.status_code != 200:
-        if out_of_quota:
-            _quota_blocked_until = time.time() + _QUOTA_BACKOFF_SECONDS
-            return None, "", (
-                "image quota exhausted on every image model. The lesson falls "
-                "back to the drawn diagram, which needs no quota. To turn "
-                "pictures on, enable billing on the Google AI Studio project "
-                "for this key."
-            )
-        return None, "", last
+    return None, "", last
 
-    try:
-        data = response.json()
-    except ValueError as exc:
-        return None, "", f"Malformed image response: {exc}"
 
-    for candidate in data.get("candidates", []):
-        for part in candidate.get("content", {}).get("parts", []):
-            inline = part.get("inlineData") or part.get("inline_data")
-            if inline and inline.get("data"):
-                try:
-                    return (base64.b64decode(inline["data"]),
-                            inline.get("mimeType") or inline.get("mime_type")
-                            or "image/png",
-                            None)
-                except (ValueError, TypeError) as exc:
-                    return None, "", f"Undecodable image data: {exc}"
+def generate_animation(scene: str, motion: str, *, timeout: float = 90.0
+                       ) -> tuple[bytes | None, bytes | None, str, str | None]:
+    """
+    Two frames of one scene. Returns (first, second, mime, error).
 
-    return None, "", "Image model returned no image"
+    `second` is None whenever the motion could not be made, which is a normal
+    outcome — no `motion` on the page, no edit-capable model on this key, the
+    quota gone, the edit refused. `first` is still returned in every one of
+    those cases and the lesson shows a still.
+    """
+    first, mime, error = generate_image(scene, timeout=timeout)
+    if not first:
+        return None, None, "", error
+    if not (motion or "").strip():
+        return first, None, mime, "no motion described for this page"
+
+    second, _, edit_error = edit_image(first, mime, motion, timeout=timeout)
+    return first, second, mime, edit_error
 
 
 def _clean_for_speech(text: str) -> str:
@@ -836,6 +1075,12 @@ LESSON_SCHEMA = {
                 # no numbers: the style is fixed by the app so every image
                 # looks like the same illustrator drew it.
                 "scene": {"type": "string"},
+
+                # What CHANGES about the scene. The picture is two frames
+                # cross-faded, and this is the difference between them — so
+                # it has to be the idea the page teaches, not a wobble added
+                # to a static picture to make it look busy.
+                "motion": {"type": "string"},
             },
             "required": ["kind", "purpose", "scene"],
         },

@@ -93,7 +93,29 @@ def illustration_dir() -> Path:
 
 
 def illustration_path(key: str) -> Path:
+    """The still. Always written, even when an animation is built from it."""
     return illustration_dir() / f"{key}.png"
+
+
+def animation_path(key: str, fmt: str = "webp") -> Path:
+    """
+    The moving version of the same scene, when one could be made.
+
+    Kept beside the still rather than replacing it: a child who has asked for
+    less movement is served the still, and so is anyone whose second frame
+    never arrived. Same key, so both are shared across the whole class.
+    """
+    fmt = fmt if fmt in ("webp", "gif") else "webp"
+    return illustration_dir() / f"{key}.{fmt}"
+
+
+def existing_animation(key: str) -> Path | None:
+    """Whichever animation format is already on disk for this scene."""
+    for fmt in ("webp", "gif"):
+        path = animation_path(key, fmt)
+        if path.exists() and path.stat().st_size > 0:
+            return path
+    return None
 
 
 def file_sha256(path: Path) -> str:

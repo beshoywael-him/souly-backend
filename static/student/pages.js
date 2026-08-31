@@ -308,33 +308,60 @@ const Pages = (() => {
   const VIS_SOFT = '#ede9fe';
   const VIS_MUTED = '#a78bfa';
 
+  const DRAWN = {
+    hundredths_grid: visGrid,
+    place_value: visPlaceValue,
+    number_line: visNumberLine,
+    bar_compare: visBars,
+    steps: visSteps,
+    labelled_parts: visParts,
+    cycle: visCycle,
+  };
+
+  /* What the drawn column is called. The heading is a promise about what is
+     in the column, and for `steps` and `labelled_parts` that promise is the
+     point: the column exists to say why each step is there, not to repeat the
+     instruction the child has already read beside it. */
+  const DIAGRAM_HEADING = {
+    steps: 'Why each step',
+    labelled_parts: 'What each part does',
+    cycle: 'What happens at each stage',
+    hundredths_grid: 'The number as a picture',
+    place_value: 'Where each digit sits',
+    number_line: 'Where the numbers sit',
+    bar_compare: 'Side by side',
+  };
+
+  /* The picture, on its own, so the lesson can hang it above both columns.
+     It is the widest thing on the page and every page gets one. */
+  function visualPicture(spec, illustrationUrl) {
+    if (!spec || !spec.scene || !illustrationUrl) return '';
+    return `<div class="lesson-picture">
+      ${visIllustration(spec, illustrationUrl)}
+      ${spec.purpose
+        ? `<p class="visual-purpose">${E(spec.purpose)}</p>` : ''}
+    </div>`;
+  }
+
+  /* The drawn diagram, on its own, so it can sit in a column beside the
+     words instead of stacked above them. */
+  function visualDiagram(spec) {
+    if (!spec) return '';
+    const body = DRAWN[spec.kind];
+    const drawn = body ? (body(spec) || '') : '';
+    if (!drawn) return '';
+    const heading = spec.title || DIAGRAM_HEADING[spec.kind] || 'A closer look';
+    return `<figure class="visual visual-${spec.kind}">
+      <figcaption class="visual-title">${E(heading)}</figcaption>
+      <div class="visual-body">${drawn}</div>
+    </figure>`;
+  }
+
+  /* Both together, stacked. Kept for anything that wants the old single
+     block; the lesson screen places the two halves itself. */
   function visual(spec, illustrationUrl) {
     if (!spec) return '';
-
-    /* The picture comes first and it comes on every page. A diagram, when the
-       page has something a diagram does better, sits underneath it. */
-    const picture = (spec.scene && illustrationUrl)
-      ? visIllustration(spec, illustrationUrl) : '';
-
-    const body = {
-      hundredths_grid: visGrid,
-      place_value: visPlaceValue,
-      number_line: visNumberLine,
-      bar_compare: visBars,
-      steps: visSteps,
-      labelled_parts: visParts,
-      cycle: visCycle,
-    }[spec.kind];
-
-    const drawn = body ? (body(spec) || '') : '';
-    if (!picture && !drawn) return '';
-
-    return `<figure class="visual visual-${spec.kind}">
-      ${spec.title ? `<figcaption class="visual-title">${E(spec.title)}</figcaption>` : ''}
-      ${picture}
-      ${drawn ? `<div class="visual-body">${drawn}</div>` : ''}
-      ${spec.purpose ? `<figcaption class="visual-purpose">${E(spec.purpose)}</figcaption>` : ''}
-    </figure>`;
+    return visualPicture(spec, illustrationUrl) + visualDiagram(spec);
   }
 
   /* Tenths and hundredths, the way this book teaches them: a whole cut into
@@ -375,8 +402,16 @@ const Pages = (() => {
       `${i === after && after > 0 ? '<td class="pv-dot">.</td>' : ''}
        <td class="${c.highlight ? 'on' : ''}">${E(c.digit || '')}</td>`).join('');
 
-    return `<table class="pv-table"><thead><tr>${head}</tr></thead>
-      <tbody><tr>${digits}</tr></tbody></table>`;
+    /* Wrapped, because this is the one diagram that has a floor on its own
+       width: seven columns headed "Thousandths" cannot shrink to fit half a
+       tablet pane, and shrinking the digits until they do would make the
+       thing it teaches unreadable. So the digits stay legible and the chart
+       scrolls inside its own box — which is a nuisance, but a local one. It
+       never drags the rest of the page sideways with it. */
+    return `<div class="pv-scroll" tabindex="0" role="group"
+                 aria-label="Place value chart">
+      <table class="pv-table"><thead><tr>${head}</tr></thead>
+      <tbody><tr>${digits}</tr></tbody></table></div>`;
   }
 
   /* Where numbers sit next to each other — rounding, and comparing. */
@@ -480,13 +515,118 @@ const Pages = (() => {
      the frame removes itself and any diagram underneath still stands. */
   function visIllustration(s, url) {
     if (!url) return '';
+
+    /* A child who has asked for less movement is sent to the still, at the
+       source — no point downloading an animation to hold it on frame one. */
+    const still = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const src = still ? url + (url.includes('?') ? '&' : '?') + 'still=1' : url;
+
     return `<div class="vis-illustration loading">
-      <img src="${E(url)}" alt="${E(s.purpose || s.scene || 'A picture for this lesson')}"
+      <div class="vis-waiting" aria-hidden="true">
+        <span class="vis-waiting-dot"></span>
+        <span class="vis-waiting-dot"></span>
+        <span class="vis-waiting-dot"></span>
+      </div>
+      <img id="lessonPicture" src="${E(src)}"
+           alt="${E(s.purpose || s.scene || 'A picture for this lesson')}"
            onload="this.parentNode.classList.remove('loading')"
            onerror="console.warn('[souly] no picture — open this URL to see why:', this.src); this.closest('.vis-illustration').remove()">
     </div>`;
   }
 
+
+  /* ==========================================================================
+     THE LESSON STAGE — one picture, then two columns of equal width
+
+     The old screen stacked three blocks of three different widths and three
+     different alignments: a 460px picture centred, a 460px step list centred,
+     and full-bleed left-aligned text. It read as three unrelated things and
+     it was tall enough that a child had to scroll or zoom out to see any of
+     it — which is exactly the load these children have least of to spend.
+
+     So: one band across the top for the picture, and beneath it two columns
+     of identical width, identical padding and identical alignment. Each has
+     one job and says so in its heading.
+
+       left   what the page has you DO, and why each part of it is there
+       right  the same page said in words, written for this child
+
+     They are deliberately not the same content twice. The left column is the
+     shape of the task; the right is the telling of it. A child who can hold
+     one of those can use it to get at the other, which is the whole reason
+     for showing both.
+
+     When there is no diagram the words take the full width rather than
+     leaving a hole — an empty column is worse than one column.
+     ========================================================================== */
+  function lessonStage(view) {
+    const spec = view.visual;
+    const picture = visualPicture(spec, view.illustration_url);
+
+    /* THE CURTAIN
+
+       While the picture is still being drawn, the words below it are in the
+       DOM but hidden, and Souly does not start reading. The picture is the
+       explanation for these children and the sentences are the support, so
+       showing the support first teaches them to skip the part that was built
+       for them — and a child who has already read the text has no reason to
+       look up when the picture finally lands.
+
+       Hidden rather than absent, so a screen reader still has the whole page
+       in order and nothing jumps when it lifts. app.js lifts it on load, on
+       error, or on a timer — see revealWhenDrawn(). If there is no picture
+       coming at all there is no curtain: nothing to wait for. */
+    const curtained = picture ? ' curtained' : '';
+    const diagram = visualDiagram(spec);
+    const words = wordSpans(view.explanation);
+
+    const chips = (view.adapted_for && view.adapted_for.length) ? `
+      <div class="adapted-strip" aria-label="How this lesson was written for you">
+        <span class="adapted-label">Written for you</span>
+        ${view.adapted_for.map(a => `<span class="adapted-chip">${E(a)}</span>`).join('')}
+      </div>` : '';
+
+    const wordCol = `
+      <section class="lesson-col lesson-col-words" aria-label="The lesson in words">
+        <h3 class="lesson-col-head">In words</h3>
+        ${chips}
+        <div class="lesson-body" id="lessonBody">${words}</div>
+      </section>`;
+
+    if (!diagram) {
+      return `<div class="lesson-stage${curtained}">${picture}
+        <div class="lesson-duo solo">${wordCol}</div></div>`;
+    }
+
+    /* One diagram has a floor on its width. A place-value chart with the
+       thousandths column in it is seven headed columns wide, and half a
+       tablet pane cannot hold that at any size a child can read — the column
+       clipped it, and the digit it clipped was the highlighted one the whole
+       page is about. So a wide chart takes the full width and the words run
+       underneath it. Losing the side-by-side layout on those pages is worth
+       a great deal less than losing the digit. */
+    const wide = spec.kind === 'place_value' && (spec.columns || []).length > 5;
+    if (wide) {
+      return `<div class="lesson-stage${curtained}">
+        ${picture}
+        <section class="lesson-col lesson-col-diagram" aria-label="How this page works">
+          ${diagram}
+        </section>
+        <div class="lesson-duo solo">${wordCol}</div>
+      </div>`;
+    }
+
+    return `<div class="lesson-stage${curtained}">
+      ${picture}
+      <div class="lesson-duo">
+        <section class="lesson-col lesson-col-diagram" aria-label="How this page works">
+          ${diagram}
+        </section>
+        ${wordCol}
+      </div>
+    </div>`;
+  }
 
   function lesson(data, view, soulyState) {
     /* `view` is what GET /lessons/{id}/pages/{page} returned: the page image,
@@ -509,7 +649,7 @@ const Pages = (() => {
         <!-- LEFT: the book page, then what Souly makes of it. -->
         <section class="pane pane-content" aria-label="Lesson content">
           <div class="glass-card" style="flex:1; display:flex; flex-direction:column;">
-            ${visual(view.visual, view.illustration_url)}
+            ${lessonStage(view)}
 
             <div class="lesson-source">
               ${E(view.book_title || '')} · page ${view.page}
@@ -517,14 +657,6 @@ const Pages = (() => {
                 ? '<span class="engine-pill gemini">AI</span>'
                 : '<span class="engine-pill fallback">offline</span>')}
             </div>
-
-            ${(view.adapted_for && view.adapted_for.length) ? `
-              <div class="adapted-strip" aria-label="How this lesson was written for you">
-                <span class="adapted-label">Written for you</span>
-                ${view.adapted_for.map(a => `<span class="adapted-chip">${E(a)}</span>`).join('')}
-              </div>` : ''}
-
-            <div class="lesson-body" id="lessonBody">${wordSpans(view.explanation)}</div>
 
             <div class="step-dots" aria-label="Page ${ordinal} of ${total}">
               ${(data.pages || []).map((_, i) =>

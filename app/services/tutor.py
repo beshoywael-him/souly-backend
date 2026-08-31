@@ -555,11 +555,56 @@ The child cannot see the book. The picture sits above your words and it is the
 part they look at first, so `scene` is never empty — not on an exercise page,
 not on a page of instructions, not ever.
 
-`scene`: the concrete thing this page is about, in plain words, ten words or
-fewer. A bean seed sprouting in a cup of soil. A plant with its roots in the
-ground. A child measuring a seedling with a ruler. No style words. NEVER any
-numbers, letters or labels — the app writes those on top afterwards, so ask
-only for the thing itself.
+`scene`: WHAT IS IN THE PICTURE and HOW IT IS ARRANGED. Plain words, up to
+twenty. Name every object, and say where each one is, because a picture the
+child cannot read is worse than no picture at all.
+
+Vague scenes produce unrecognisable pictures. Be concrete:
+
+  WEAK    "seed growing"
+  GOOD    "a sprouted bean seed in a clear glass of dark soil, roots showing"
+
+  WEAK    "comparing two plants"
+  GOOD    "on the left a seedling on a damp paper towel, on the right the
+           same seedling in a cup of soil"
+
+Name real, everyday, recognisable objects — a glass, a cup, a ruler, a leaf.
+Say the colour or material when it helps someone recognise it. If the page
+compares two things, say "on the left … on the right …" so both appear.
+
+`motion`: WHAT CHANGES. The picture is not a still — it is this scene before
+and after one change, fading gently back and forth. `motion` is that change,
+in up to twelve words, describing the AFTER state.
+
+Make the change BE the idea of the page. A child who cannot read the words
+should be able to work out what the page is about from watching it happen:
+
+  page about germination     "the seed has split open and a green shoot has
+                              risen from it"
+  page about needing water   "the leaves have drooped and gone limp"
+  page about seed dispersal  "the seeds have blown off the stalk and away"
+  page about rounding        "the marker has moved to the nearer ten"
+
+Rules for `motion`:
+- ONE change, to ONE thing. Everything else in the picture stays put — it is
+  the same picture with one difference, not a second picture.
+- It must mean something. Do not write "the picture sways gently" or "the
+  leaves shimmer": movement with no meaning is a distraction on a screen
+  built for children who find it hard to look away from movement.
+- Same rules as `scene`: no numbers, no letters, no labels, no people.
+- If nothing on this page meaningfully changes — a page about the parts of a
+  finished object, say — leave `motion` out. A still picture is a perfectly
+  good answer and better than an invented wiggle.
+
+Three hard rules for `scene`:
+- NO PEOPLE. Objects, plants, animals, tools. An app used by children should
+  not be generating pictures of children, and the image service refuses them
+  anyway.
+- NEVER any numbers, letters or labels. The app writes those on top
+  afterwards, so ask only for the thing itself.
+- No style, mood or art-direction words. No "cute", "playful", "cartoon",
+  "flat", "vector", "colourful". The app fixes the style so every picture in
+  the book looks like one illustrator drew it; your job is only the content.
 
 `kind`: ALSO choose a drawn diagram. This one always appears — it needs no
 picture service and works with the network down — so choose the best fit
@@ -593,14 +638,31 @@ Pick the kind that does the job:
   labelled_parts   a thing and the names of its parts. Set `items`.
   cycle            something that goes round: photosynthesis, water, a life
                    cycle. Set `items`.
+
+`note`: THE REASON, NEVER THE INSTRUCTION AGAIN.
+
+This is the rule people get wrong, so read it twice. The diagram sits in one
+column and your `chunks` sit in the column beside it, both on screen at the
+same time. If `note` repeats what the chunk already says, the child reads the
+same sentence twice and learns nothing the second time.
+
+  label  what it is, three or four words
+  note   WHY it is there — what it is for, what would go wrong without it
+
+  RIGHT  label "Seeds in a paper towel"
+         note  "You can watch the root come out"
+  WRONG  label "Paper towel setup"
+         note  "Place three seeds in folded towel on a plate"   <- the chunk
+
+For `labelled_parts`, `note` is the job that part does. For `cycle`, `note` is
+why that stage has to come after the one before it. Leave `note` out entirely
+rather than filling it with the instruction again.
   illustration     a real picture of a concrete thing — a plant, a seed being
-                   carried by the wind, a child measuring something. This is
+                   carried by the wind, a ruler beside a seedling. This is
                    usually the right choice for a science page about a living
-                   thing or an object. Set
-                   `scene` to WHAT IS IN THE PICTURE, in plain words, ten
-                   words or fewer. No style words. Never put numbers,
-                   letters or labels in `scene`: everything written is added
-                   afterwards by the app, so ask only for the thing itself.
+                   thing or an object. `scene` follows the rules above:
+                   every object named, where each one sits, no numbers, no
+                   letters, no style words, no people.
 
 Every number you put in the picture must come from this page. A picture that
 disagrees with the page is worse than no picture, because the child will
@@ -675,10 +737,39 @@ def _clean_visual(raw) -> dict | None:
     # The picture. Digits in the scene are the failure mode — the image model
     # will render them, and it will render them wrong — so a scene containing
     # any is stripped back to nothing rather than sent.
+    #
+    # The word budget was 16 and is now 32. Short scenes were producing
+    # unrecognisable pictures: "seed growing" gives the model nothing to draw
+    # and it fills the gap with decoration. Naming the objects and where they
+    # sit takes more words than that, and those words are what makes the
+    # picture legible.
+    #
+    # The prompt asks for twenty; this allows thirty-two on purpose. It is a
+    # safety valve against a scene that has run away into prose, not an
+    # enforcement of the request — and a good twenty-eight-word scene thrown
+    # out for being eight words long leaves the child with no picture at all,
+    # which is the failure this whole path exists to prevent.
     scene = str(raw.get("scene") or "").strip()
-    if scene and len(scene.split()) <= 16 and not re.search(r"\d", scene):
+    if scene and len(scene.split()) <= 32 and not re.search(r"\d", scene):
         spec["scene"] = scene
-        spec["key"] = hashlib.sha1(scene.lower().encode()).hexdigest()[:16]
+
+        # What changes between the two frames. Held to the same standards as
+        # the scene, and additionally refused when it is decorative: a picture
+        # that sways for no reason is movement on a screen built for children
+        # who find movement hard to look away from, and it is bought at the
+        # price of a second image call.
+        motion = str(raw.get("motion") or "").strip()
+        if (motion and len(motion.split()) <= 18
+                and not re.search(r"\d", motion)
+                and not _is_decorative(motion)):
+            spec["motion"] = motion
+
+        # The cache key covers the motion as well as the scene. Two pages that
+        # want the same picture but different changes in it are two different
+        # animations, and keying on the scene alone would serve the first
+        # page's motion to the second.
+        seed = f"{scene.lower()}|{spec.get('motion', '').lower()}"
+        spec["key"] = hashlib.sha1(seed.encode()).hexdigest()[:16]
 
     if kind == "none":
         # No diagram. Then the picture has to carry it alone.
@@ -744,6 +835,76 @@ def _clean_visual(raw) -> dict | None:
     return spec
 
 
+_ECHO_STOPWORDS = frozenset("""
+a an and are as at be by do for from in into is it its of on or so that the
+then them they this to up with you your it's put place
+""".split())
+
+# Above this share of a step's words already appearing in one of the
+# explanation chunks, the note is a paraphrase of the chunk rather than a
+# reason for the step. Set by hand from the case that prompted it — the
+# paper-towel page, where the note and the chunk matched at 0.85 — and left
+# high on purpose, because dropping a genuine reason costs more than leaving
+# one echo through.
+_ECHO_THRESHOLD = 0.7
+
+
+def _words(text: str) -> set[str]:
+    return {w for w in re.findall(r"[a-z']+", (text or "").lower())
+            if w not in _ECHO_STOPWORDS and len(w) > 2}
+
+
+# Movement that means nothing. Asked for repeatedly despite the instruction,
+# because "make it move" reads to a language model as "make it lively", and
+# the result is an ambient wobble: a second image call spent on a distraction,
+# on a screen used by children who cannot easily look away from one.
+_DECORATIVE_MOTION = (
+    "sway", "swaying", "shimmer", "shimmering", "sparkle", "sparkling",
+    "glow", "glowing", "twinkle", "twinkling", "gently move", "gentle movement",
+    "slight movement", "wobble", "wiggle", "pulse", "pulsing", "breathe",
+    "breathing", "float", "floating gently", "zoom", "pan", "camera",
+)
+
+
+def _is_decorative(motion: str) -> bool:
+    low = motion.lower()
+    return any(word in low for word in _DECORATIVE_MOTION)
+
+
+def _drop_echoed_notes(visual: dict | None, chunks: list[str]) -> dict | None:
+    """
+    Strip step notes that just say the explanation again.
+
+    The two columns are on screen together. When the note under "Paper towel
+    setup" reads "Place three seeds in folded towel on a plate" and the chunk
+    beside it reads "Place three seeds in a paper towel, fold it over them,
+    and put it on a plate", the child is being asked to read one instruction
+    twice — which is not a second explanation, it is the same load again.
+
+    The prompt asks for the reason instead. This is what happens when it is
+    ignored: the note goes, the label stays, and the column is shorter and
+    honest rather than long and redundant.
+    """
+    if not visual or not chunks:
+        return visual
+    items = visual.get("items")
+    if not isinstance(items, list) or not items:
+        return visual
+
+    chunk_words = [_words(c) for c in chunks]
+
+    for item in items:
+        note = _words(item.get("note"))
+        if not note:
+            continue
+        overlap = max((len(note & c) / len(note) for c in chunk_words if c),
+                      default=0.0)
+        if overlap >= _ECHO_THRESHOLD:
+            item["note"] = ""
+
+    return visual
+
+
 def _second_attempt_at_a_picture(context: str, profile: dict) -> dict | None:
     """
     Ask for the picture on its own, having asked for it alongside the lesson
@@ -787,7 +948,8 @@ def _diagram_or_picture(spec: dict) -> dict | None:
         return None
     return {"kind": "none", "purpose": spec.get("purpose", ""),
             "title": spec.get("title", ""),
-            "scene": spec["scene"], "key": spec["key"]}
+            "scene": spec["scene"], "motion": spec.get("motion", ""),
+            "key": spec["key"]}
 
 
 def _load_visual(raw: str | None) -> dict | None:
@@ -961,6 +1123,9 @@ def rendition(
                 visual = better
             elif visual is None:
                 visual = better
+
+        # Last line of defence against the two columns saying the same thing.
+        visual = _drop_echoed_notes(visual, chunks)
     else:
         result = llm.generate(
             instruction,

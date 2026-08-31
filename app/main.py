@@ -22,6 +22,7 @@ from app.config import settings
 from app.db import init_db
 from app.routers import (
     auth,
+    device,
     flags,
     gamification,
     health,
@@ -88,6 +89,11 @@ app.include_router(parent.router)
 # the threat model at the top of routers/teacher_auth.py.
 app.include_router(teacher_auth.router)
 app.include_router(teacher.router)
+
+# The classroom device: RFID reader, 20x4 screen, lamp. Its own key realm,
+# and it renders its own screen server-side so the ESP32 stays a dumb
+# terminal that prints four strings.
+app.include_router(device.router)
 
 # --- Static UI ---------------------------------------------------------------
 if settings.static_dir.exists():

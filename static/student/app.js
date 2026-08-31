@@ -584,6 +584,10 @@ const App = (() => {
     host.innerHTML = Pages.lesson(data, view);
     State.lessonView = view;
 
+    // Nothing below the picture, and nothing read aloud, until the picture is
+    // there. See revealWhenDrawn().
+    await revealWhenDrawn(host);
+
     stepEnteredAt = Date.now();
     offeredOnThisStep = false;
     startStallWatch();
@@ -593,6 +597,46 @@ const App = (() => {
       // abrupt jump is disorienting.
       setTimeout(() => Voice.readStep(), 500);
     }
+  }
+
+  /* How long a child is made to wait for a picture before the lesson starts
+     without it. Generation is two calls to an image model and can take twenty
+     seconds on a cold page; the file is then cached and shared by the whole
+     class, so only the first child on a page ever waits at all.
+
+     This cap is the safety valve, not the plan. The plan is
+     scripts/pregenerate_illustrations.py, run once before a lesson so the
+     cache is warm and nobody waits. A cap is still needed because a child
+     stuck in front of a blank screen because a server is down is a worse
+     failure than a child reading a lesson with no picture. */
+  const PICTURE_WAIT_MS = 40000;
+
+  async function revealWhenDrawn(host) {
+    const stage = host.querySelector('.lesson-stage.curtained');
+    if (!stage) return;                       // no picture coming; nothing to wait for
+
+    const img = stage.querySelector('#lessonPicture');
+    const lift = () => stage.classList.remove('curtained');
+
+    if (!img) { lift(); return; }
+    if (img.complete && img.naturalWidth > 0) { lift(); return; }
+
+    await new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        lift();
+        resolve();
+      };
+      // `error` matters as much as `load`: no API key, no quota, no network.
+      // The frame removes itself and the child gets the lesson immediately,
+      // rather than being held behind a picture that is never coming.
+      img.addEventListener('load', finish, { once: true });
+      img.addEventListener('error', finish, { once: true });
+      const timer = setTimeout(finish, PICTURE_WAIT_MS);
+    });
   }
 
   /* Move to the page at `ordinal` (1-based within the lesson), recording the
@@ -1087,6 +1131,12 @@ const App = (() => {
         await Gate.start();
       }
     }
+
+    // Safety net. Profile has no tab any more, so the avatar button is the
+    // only door to it: if a signed-in child ever reaches this point with it
+    // still hidden, they are locked out of their own settings. Cheap to
+    // re-run, and it means no future path can lose the door again.
+    if (Api.isSignedIn() && el('avatarBtn')?.hidden) showAvatar();
   }
 
   /* Called by the sign-in screen once a child is through. */

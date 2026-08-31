@@ -19,6 +19,13 @@ python-dotenv>=1.0
 # Used by the CV simulator, the polling client, the vendor clients, and tests
 httpx>=0.27
 
+# The lesson picture moves: two generated frames cross-faded into a looping
+# WebP (or GIF). Pillow builds that loop, and it also renders the book pages
+# during ingest. It was already being installed as somebody else's dependency,
+# which was luck rather than a plan — it is served at study time now, so it is
+# declared. Without it the app still runs and every picture is a still.
+Pillow>=10.0
+
 # Tests
 pytest>=8.0
 

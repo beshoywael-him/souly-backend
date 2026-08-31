@@ -1488,16 +1488,64 @@ def test_quota_refusal_backs_off_instead_of_retrying_every_page(client):
         settings.gemini_api_key = was_key
 
 
-def test_the_image_call_asks_for_an_image(client):
+def test_imagen_and_gemini_speak_different_protocols(client):
     """
-    Souly said "I will draw the bean seeds for you now" and nothing appeared.
-    The call was succeeding and returning a paragraph ABOUT the picture,
-    because nothing told the model to reply with an image.
+    Swapping IMAGE_GENERATOR_MODEL from a gemini *-image to imagen-3 is not a
+    name change: different verb, different request body, different place to
+    find the bytes. Getting this wrong looks exactly like "no picture".
     """
-    import inspect
     from app.services import llm
 
-    assert "responseModalities" in inspect.getsource(llm.generate_image)
+    assert llm._image_endpoint("imagen-3.0-generate-002").endswith(":predict")
+    assert llm._image_endpoint("gemini-3.1-flash-image").endswith(":generateContent")
+
+    imagen = llm._image_payloads("imagen-3.0-generate-002", "a plant")[0]
+    assert imagen["instances"][0]["prompt"] == "a plant"
+    assert imagen["parameters"]["aspectRatio"] in llm.VALID_ASPECT_RATIOS
+
+    gemini = llm._image_payloads("gemini-3.1-flash-image", "a plant")[0]
+    assert "contents" in gemini
+    assert gemini["generationConfig"]["responseModalities"] == ["IMAGE"]
+
+    # And each response shape is read from the right place.
+    assert llm._extract_image(
+        "imagen-3.0-generate-002",
+        {"predictions": [{"bytesBase64Encoded": "aGk=", "mimeType": "image/png"}]},
+    ) == (b"hi", "image/png")
+    assert llm._extract_image(
+        "gemini-3.1-flash-image",
+        {"candidates": [{"content": {"parts": [
+            {"inlineData": {"data": "aGk=", "mimeType": "image/png"}}]}}]},
+    ) == (b"hi", "image/png")
+
+
+def test_no_pictures_of_people_are_ever_requested(client):
+    """
+    An app used by children should not be generating pictures of children.
+    Imagen refuses them anyway, so a scene with a person in it is both a
+    safety problem and a failed request.
+    """
+    from app.services import llm, tutor
+
+    imagen = llm._image_payloads("imagen-3.0-generate-002", "x")[0]
+    assert imagen["parameters"]["personGeneration"] == "dont_allow"
+    assert "no people" in llm.ILLUSTRATION_STYLE.lower()
+    assert "NO PEOPLE" in tutor.VISUAL_INSTRUCTION
+
+
+def test_pictures_can_be_switched_off_entirely(client):
+    """`IMAGE_GENERATOR_PROVIDER=none` and the app stops asking."""
+    from app.config import settings
+    from app.services import llm
+
+    was = settings.image_generator_provider
+    try:
+        settings.image_generator_provider = "none"
+        image, _, error = llm.generate_image("a plant")
+        assert image is None
+        assert "switched off" in error
+    finally:
+        settings.image_generator_provider = was
 
 
 def test_a_malformed_diagram_is_dropped_rather_than_drawn_wrong(client):

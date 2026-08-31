@@ -26,3 +26,4 @@ data/curriculum/.cache/
 # Temporary/generated files
 data/.fuse_hidden*
 _to_delete/
+souly-backend/ 

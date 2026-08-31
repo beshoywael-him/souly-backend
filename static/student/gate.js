@@ -253,12 +253,24 @@ const Gate = (() => {
       const me = await Api.get('/api/auth/me');
       Api.setSession(token, me.student_ext_id);
       if (me.needs_onboarding) { Onboard.start(); return true; }
-      hide();
-      return true;
     } catch (_) {
+      // Only a bad token lands here. Nothing below is allowed to.
       Api.clearSession();
       return false;
     }
+
+    hide();
+    // The same landing every other path takes: settings, the avatar button
+    // top right (the only door to Profile now that it has no tab), and the
+    // saved route. Skipping it on reload left a returning child with no way
+    // to reach Profile and always dumped them back at Home.
+    //
+    // Deliberately outside the try: this is rendering, not authentication.
+    // A thrown error in here used to fall into the catch above, wipe a
+    // perfectly good session, and throw the child back to the picker — the
+    // one failure a signed-in child should never see.
+    try { await App.afterLogin(); } catch (e) { console.error(e); }
+    return true;
   }
 
   return { start, choose, tap, clearPicks, back, resume, hide };

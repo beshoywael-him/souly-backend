@@ -21,17 +21,21 @@ Every one of those effects is a real database write.
 """
 
 import json
+import logging
 import random
 import sqlite3
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from app import economy
+from app.config import settings
 from app.db import db_dependency
 from app.deps import get_student
-from app.services import curriculum, llm, tutor
+from app.services import animation, curriculum, llm, tutor
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/students/{student_ext_id}", tags=["learning"])
 
@@ -457,10 +461,34 @@ def page_image(
     return FileResponse(path, media_type="image/jpeg")
 
 
+_MEDIA_BY_SUFFIX = {".webp": "image/webp", ".gif": "image/gif",
+                    ".png": "image/png", ".jpg": "image/jpeg"}
+
+
+def _media_type(path) -> str:
+    return _MEDIA_BY_SUFFIX.get(path.suffix.lower(), "image/png")
+
+
+def _draw(visual: dict, *, animate: bool):
+    """
+    The frames for this scene. Returns (first, second, mime, error).
+
+    Split out so the warm-up script draws by exactly the same path the app
+    does — a cache the script fills but the app cannot read is worse than no
+    cache at all.
+    """
+    if animate and settings.motion_configured and visual.get("motion"):
+        return llm.generate_animation(visual["scene"], visual["motion"])
+    first, mime, error = llm.generate_image(visual["scene"])
+    return first, None, mime, error
+
+
 @router.get("/curriculum/pages/{page_id}/illustration",
             summary="The generated picture for this page, for this child")
 def page_illustration(
     page_id: int,
+    request: Request,
+    still_only: bool = False,
     student: sqlite3.Row = Depends(get_student),
     conn: sqlite3.Connection = Depends(db_dependency),
 ):
@@ -487,20 +515,60 @@ def page_illustration(
         raise HTTPException(status_code=404,
                             detail="This page has no illustration.")
 
-    path = curriculum.illustration_path(visual["key"])
-    if path.exists() and path.stat().st_size > 0:
-        return FileResponse(path, media_type="image/png")
+    key = visual["key"]
+    still = curriculum.illustration_path(key)
 
-    image, mime, error = llm.generate_image(visual["scene"])
+    # A child who has asked for less movement gets the still, always, even
+    # when the animation is sitting right there on disk. The browser sends
+    # this as a request header on its own; the client also passes ?still=1
+    # from the app's own reduced-motion setting.
+    wants_still = still_only or "reduce" in (
+        request.headers.get("sec-ch-prefers-reduced-motion") or "").lower()
+
+    if not wants_still:
+        cached = curriculum.existing_animation(key)
+        if cached is not None:
+            return FileResponse(cached, media_type=_media_type(cached))
+
+    have_still = still.exists() and still.stat().st_size > 0
+    animatable = (not wants_still and settings.motion_configured
+                  and visual.get("motion"))
+
+    if have_still and not animatable:
+        return FileResponse(still, media_type="image/png")
+
+    if have_still:
+        # A still cached before this page had motion, or before motion
+        # existed at all. The first frame is already paid for — only the
+        # second one needs drawing, so this costs one call rather than two
+        # and every picture generated before today can still come to life.
+        image = still.read_bytes()
+        second, _, error = llm.edit_image(image, "image/png", visual["motion"])
+        mime = "image/png"
+    else:
+        image, second, mime, error = _draw(visual, animate=not wants_still)
+
     if not image:
         # A lesson whose picture failed is still a lesson. The client hides
-        # the frame and the child reads on.
+        # the frame, lifts the curtain and the child reads on.
         raise HTTPException(status_code=503,
                             detail=f"Could not draw that yet: {error}")
 
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(image)
-    return FileResponse(path, media_type=mime or "image/png")
+    still.parent.mkdir(parents=True, exist_ok=True)
+    still.write_bytes(image)
+
+    if second:
+        fmt = settings.motion_format
+        target = curriculum.animation_path(key, fmt)
+        try:
+            media = animation.write(target, image, second, fmt=fmt)
+            return FileResponse(target, media_type=media)
+        except Exception as exc:            # Pillow missing, or bad bytes
+            # Never fatal. Two good frames that would not assemble is a
+            # still picture, not a broken lesson.
+            log.warning("could not assemble the animation for %s: %s", key, exc)
+
+    return FileResponse(still, media_type=mime or "image/png")
 
 
 @router.get("/lessons/{topic_id}/pages/{page_no}",

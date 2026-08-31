@@ -36,23 +36,28 @@ def main() -> int:
                     help="print the whole HTTP response, not just the verdict")
     args = ap.parse_args()
 
-    print(f"key        {'set (' + settings.gemini_api_key[:6] + '…)' if settings.gemini_api_key else 'MISSING'}")
+    key = settings.image_key
+    print(f"provider   {settings.image_generator_provider}")
+    print(f"image key  {'set (' + key[:6] + '…)' if key else 'MISSING'}"
+          + ("  [same as GEMINI_API_KEY]"
+             if key and not settings.image_generator_api_key else ""))
+    print(f"model      {settings.image_generator_model}")
+    print(f"aspect     {llm.aspect_ratio()}")
+    print(f"fallbacks  {', '.join(llm.image_models()[1:])}")
     print(f"text model {settings.gemini_model}")
-    print(f"image      {', '.join(llm.IMAGE_MODELS)}")
     print(f"scene      {args.scene!r}")
     print()
 
     if args.raw:
         import httpx
 
-        url = f"{llm.GEMINI_BASE}/models/{llm.IMAGE_MODEL}:generateContent"
-        payload = {
-            "contents": [{"role": "user", "parts": [
-                {"text": f"{args.scene}.\n\n{llm.ILLUSTRATION_STYLE}"}]}],
-            "generationConfig": {"responseModalities": ["IMAGE"]},
-        }
+        model = settings.image_generator_model
+        url = llm._image_endpoint(model)
+        prompt = f"{args.scene}.\n\n{llm.ILLUSTRATION_STYLE}"
+        payload = llm._image_payloads(model, prompt)[0]
+        print(f"POST {url}")
         with httpx.Client(timeout=90) as client:
-            response = client.post(url, params={"key": settings.gemini_api_key},
+            response = client.post(url, params={"key": settings.image_key},
                                    json=payload)
         print(f"HTTP {response.status_code}")
         try:
@@ -66,6 +71,10 @@ def main() -> int:
                 inline = part.get("inlineData") or part.get("inline_data")
                 if inline and inline.get("data"):
                     inline["data"] = f"<{len(inline['data'])} chars of base64>"
+        for prediction in body.get("predictions", []):
+            if prediction.get("bytesBase64Encoded"):
+                prediction["bytesBase64Encoded"] = (
+                    f"<{len(prediction['bytesBase64Encoded'])} chars of base64>")
         print(json.dumps(body, indent=2)[:4000])
         return 0 if response.status_code == 200 else 1
 
