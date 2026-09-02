@@ -74,6 +74,17 @@ POLL_MS = 1000
 # A tap confirmation stays up this long before the screen returns to the clock.
 TAP_HOLD_MS = 2000
 
+# Is the screen lit when nothing is happening?
+#
+# The original brief said no: "until that, nothing is shown on the screen". In a
+# real classroom that is right — a screen glowing on a teacher's desk all lesson
+# is the kind of thing that gets a device unplugged.
+#
+# At a competition stand it is wrong. A dark screen reads as a broken device to
+# a judge walking past, and nobody taps a card to find out. Lit at the stand,
+# dark in a classroom; one line, no reflash.
+IDLE_BACKLIGHT = True
+
 
 # What each CV flag type reads as on a 20-column screen. Plain language: the
 # teacher is reading this from across a room, mid-lesson.
@@ -430,7 +441,7 @@ def _render_state(conn, device, klass, session) -> dict:
         return {
             "state": "unconfigured",
             "lines": _screen(device, "Souly", "No class assigned", "", ""),
-            "led": _no_led(), "backlight": False, "hold_ms": 0,
+            "led": _no_led(), "backlight": IDLE_BACKLIGHT, "hold_ms": 0,
         }
 
     if session is None:
@@ -438,7 +449,7 @@ def _render_state(conn, device, klass, session) -> dict:
             "state": "idle",
             "lines": _screen(device, "Souly  Classroom", klass["screen_name"], "",
                              "Tap card to start"),
-            "led": _no_led(), "backlight": False, "hold_ms": 0,
+            "led": _no_led(), "backlight": IDLE_BACKLIGHT, "hold_ms": 0,
         }
 
     # --- in a session: is there anything to say? ----------------------------
@@ -452,7 +463,7 @@ def _render_state(conn, device, klass, session) -> dict:
                              klass["screen_name"],
                              _centre(_hhmmss(_elapsed_s(session["started_at"])), cols),
                              "Tap card to end"),
-            "led": _no_led(), "backlight": False, "hold_ms": 0,
+            "led": _no_led(), "backlight": IDLE_BACKLIGHT, "hold_ms": 0,
         }
 
     if display["kind"] == "room":

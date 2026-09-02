@@ -27,3 +27,9 @@ data/curriculum/.cache/
 data/.fuse_hidden*
 _to_delete/
 souly-backend/ 
+
+# Documents the .env format, but the copy in this repo had real keys in it
+env-snippet.txt
+
+# The device firmware keeps WiFi and its device key here, never in the sketch
+firmware/**/secrets.h
