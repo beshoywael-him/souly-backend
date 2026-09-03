@@ -35,6 +35,7 @@ from app.routers import (
     student,
     teacher,
     teacher_auth,
+    teacher_classroom,
     tutor_api,
 )
 
@@ -89,6 +90,7 @@ app.include_router(parent.router)
 # the threat model at the top of routers/teacher_auth.py.
 app.include_router(teacher_auth.router)
 app.include_router(teacher.router)
+app.include_router(teacher_classroom.router)
 
 # The classroom device: RFID reader, 20x4 screen, lamp. Its own key realm,
 # and it renders its own screen server-side so the ESP32 stays a dumb
